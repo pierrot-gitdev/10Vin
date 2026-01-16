@@ -91,6 +91,7 @@
 			knownRegions = (
 				en,
 				Base,
+				fr,
 			);
 			mainGroup = 8F6C73722F1A9050009B8825;
 			minimizedProjectReferenceProxies = 1;
@@ -264,10 +265,13 @@
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				"INFOPLIST_KEY_NSCameraUsageDescription" = "L'application a besoin d'accéder à votre caméra pour prendre une photo de profil.";
+				"INFOPLIST_KEY_NSPhotoLibraryUsageDescription" = "L'application a besoin d'accéder à votre galerie photo pour sélectionner une photo de profil.";
+				"INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription" = "L'application a besoin d'accéder à votre galerie photo pour sauvegarder des images.";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 26.2;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.devpierre.-0Vin";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -308,10 +312,13 @@
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				"INFOPLIST_KEY_NSCameraUsageDescription" = "L'application a besoin d'accéder à votre caméra pour prendre une photo de profil.";
+				"INFOPLIST_KEY_NSPhotoLibraryUsageDescription" = "L'application a besoin d'accéder à votre galerie photo pour sélectionner une photo de profil.";
+				"INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription" = "L'application a besoin d'accéder à votre galerie photo pour sauvegarder des images.";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 26.2;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.devpierre.-0Vin";
 				PRODUCT_NAME = "$(TARGET_NAME)";

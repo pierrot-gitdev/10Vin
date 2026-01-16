@@ -1,0 +1,107 @@
+/* 
+  Localizable.strings
+  10Vin
+  
+  French Localization
+*/
+
+// Tab Bar
+"tab.feed" = "Découvrir";
+"tab.add" = "Ajouter";
+"tab.profile" = "Profil";
+
+// Wine Types
+"wine.type.red" = "Rouge";
+"wine.type.white" = "Blanc";
+"wine.type.rose" = "Rosé";
+"wine.type.champagne" = "Champagne";
+
+// Add Wine Form
+"add.wine.title" = "Ajouter un vin";
+"add.wine.type" = "Type de vin";
+"add.wine.grapeVariety" = "Cépage";
+"add.wine.grapeVariety.placeholder" = "Ex: Pinot Noir, Chardonnay...";
+"add.wine.domain" = "Domaine";
+"add.wine.domain.placeholder" = "Nom du domaine";
+"add.wine.vintage" = "Millésime";
+"add.wine.region" = "Région";
+"add.wine.region.placeholder" = "Ex: Bourgogne, Bordeaux...";
+"add.wine.tastingNotes" = "Notes de dégustation";
+"add.wine.tastingNotes.placeholder" = "Décrivez votre expérience...";
+"add.wine.rating" = "Note (sur 10)";
+"add.wine.save" = "Enregistrer";
+"add.wine.cancel" = "Annuler";
+
+// Profile
+"profile.title" = "Mon Profil";
+"profile.winesTasted" = "Vins goûtés";
+"profile.wishlist" = "Ma liste de souhaits";
+"profile.winesCount" = "%d vin(s)";
+"profile.wishlist.add" = "Ajouter à la wishlist";
+"profile.wishlist.remove" = "Retirer de la wishlist";
+
+// Feed
+"feed.title" = "Découvrir";
+"feed.noPosts" = "Aucune publication pour le moment";
+"feed.like" = "J'aime";
+"feed.comment" = "Commenter";
+"feed.comments" = "Commentaires";
+"feed.addComment" = "Ajouter un commentaire...";
+"feed.postComment" = "Publier";
+
+// Wine Card
+"wine.card.domain" = "Domaine";
+"wine.card.vintage" = "Millésime";
+"wine.card.region" = "Région";
+"wine.card.rating" = "Note";
+
+// Filters
+"filter.title" = "Filtres";
+"filter.type" = "Type";
+"filter.grapeVariety" = "Cépage";
+"filter.region" = "Région";
+"filter.all" = "Tous";
+"filter.reset" = "Réinitialiser";
+"filter.apply" = "Appliquer";
+
+// Common
+"common.loading" = "Chargement...";
+"common.error" = "Erreur";
+"common.ok" = "OK";
+"common.delete" = "Supprimer";
+"common.edit" = "Modifier";
+"common.save" = "Enregistrer";
+"common.cancel" = "Annuler";
+
+// Settings
+"settings.title" = "Paramètres";
+"settings.profile" = "Profil";
+"settings.app" = "Application";
+"settings.account" = "Compte";
+"settings.editProfile" = "Modifier le profil";
+"settings.logout" = "Se déconnecter";
+
+// Edit Profile
+"settings.editProfile.title" = "Modifier le profil";
+"settings.editProfile.username" = "Pseudonyme";
+"settings.editProfile.username.placeholder" = "Votre pseudonyme";
+"settings.editProfile.email" = "Email";
+"settings.editProfile.email.placeholder" = "votre@email.com";
+"settings.editProfile.changePhoto" = "Changer la photo";
+"settings.editProfile.selectPhoto" = "Sélectionner une photo";
+"settings.editProfile.gallery" = "Galerie";
+"settings.editProfile.camera" = "Caméra";
+
+// Privacy
+"settings.privacy.title" = "Confidentialité du profil";
+"settings.privacy.public" = "Public";
+"settings.privacy.public.description" = "Tout le monde peut voir votre profil et vos vins";
+"settings.privacy.private" = "Privé";
+"settings.privacy.private.description" = "Seuls vos abonnés peuvent voir votre profil";
+"settings.privacy.secret" = "Secret";
+"settings.privacy.secret.description" = "Votre profil est complètement privé";
+
+// Language
+"settings.language.title" = "Langue de l'application";
+"settings.language.french" = "Français";
+"settings.language.english" = "Anglais";

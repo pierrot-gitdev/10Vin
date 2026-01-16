@@ -1,0 +1,107 @@
+/* 
+  Localizable.strings
+  10Vin
+  
+  English Localization
+*/
+
+// Tab Bar
+"tab.feed" = "Discover";
+"tab.add" = "Add";
+"tab.profile" = "Profile";
+
+// Wine Types
+"wine.type.red" = "Red";
+"wine.type.white" = "White";
+"wine.type.rose" = "Rosé";
+"wine.type.champagne" = "Champagne";
+
+// Add Wine Form
+"add.wine.title" = "Add a Wine";
+"add.wine.type" = "Wine Type";
+"add.wine.grapeVariety" = "Grape Variety";
+"add.wine.grapeVariety.placeholder" = "Ex: Pinot Noir, Chardonnay...";
+"add.wine.domain" = "Domain";
+"add.wine.domain.placeholder" = "Domain name";
+"add.wine.vintage" = "Vintage";
+"add.wine.region" = "Region";
+"add.wine.region.placeholder" = "Ex: Burgundy, Bordeaux...";
+"add.wine.tastingNotes" = "Tasting Notes";
+"add.wine.tastingNotes.placeholder" = "Describe your experience...";
+"add.wine.rating" = "Rating (out of 10)";
+"add.wine.save" = "Save";
+"add.wine.cancel" = "Cancel";
+
+// Profile
+"profile.title" = "My Profile";
+"profile.winesTasted" = "Wines Tasted";
+"profile.wishlist" = "My Wishlist";
+"profile.winesCount" = "%d wine(s)";
+"profile.wishlist.add" = "Add to wishlist";
+"profile.wishlist.remove" = "Remove from wishlist";
+
+// Feed
+"feed.title" = "Discover";
+"feed.noPosts" = "No posts yet";
+"feed.like" = "Like";
+"feed.comment" = "Comment";
+"feed.comments" = "Comments";
+"feed.addComment" = "Add a comment...";
+"feed.postComment" = "Post";
+
+// Wine Card
+"wine.card.domain" = "Domain";
+"wine.card.vintage" = "Vintage";
+"wine.card.region" = "Region";
+"wine.card.rating" = "Rating";
+
+// Filters
+"filter.title" = "Filters";
+"filter.type" = "Type";
+"filter.grapeVariety" = "Grape Variety";
+"filter.region" = "Region";
+"filter.all" = "All";
+"filter.reset" = "Reset";
+"filter.apply" = "Apply";
+
+// Common
+"common.loading" = "Loading...";
+"common.error" = "Error";
+"common.ok" = "OK";
+"common.delete" = "Delete";
+"common.edit" = "Edit";
+"common.save" = "Save";
+"common.cancel" = "Cancel";
+
+// Settings
+"settings.title" = "Settings";
+"settings.profile" = "Profile";
+"settings.app" = "Application";
+"settings.account" = "Account";
+"settings.editProfile" = "Edit Profile";
+"settings.logout" = "Logout";
+
+// Edit Profile
+"settings.editProfile.title" = "Edit Profile";
+"settings.editProfile.username" = "Username";
+"settings.editProfile.username.placeholder" = "Your username";
+"settings.editProfile.email" = "Email";
+"settings.editProfile.email.placeholder" = "your@email.com";
+"settings.editProfile.changePhoto" = "Change Photo";
+"settings.editProfile.selectPhoto" = "Select a Photo";
+"settings.editProfile.gallery" = "Gallery";
+"settings.editProfile.camera" = "Camera";
+
+// Privacy
+"settings.privacy.title" = "Profile Privacy";
+"settings.privacy.public" = "Public";
+"settings.privacy.public.description" = "Everyone can see your profile and wines";
+"settings.privacy.private" = "Private";
+"settings.privacy.private.description" = "Only your followers can see your profile";
+"settings.privacy.secret" = "Secret";
+"settings.privacy.secret.description" = "Your profile is completely private";
+
+// Language
+"settings.language.title" = "Application Language";
+"settings.language.french" = "French";
+"settings.language.english" = "English";
