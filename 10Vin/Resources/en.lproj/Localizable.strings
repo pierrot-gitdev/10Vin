@@ -73,6 +73,16 @@
 "common.save" = "Save";
 "common.cancel" = "Cancel";
 
+// Time Relative
+"time.relative.justNow" = "Just now";
+"time.relative.seconds" = "%d second(s) ago";
+"time.relative.minutes" = "%d minute(s) ago";
+"time.relative.hours" = "%d hour(s) ago";
+"time.relative.days" = "%d day(s) ago";
+"time.relative.weeks" = "%d week(s) ago";
+"time.relative.months" = "%d month(s) ago";
+"time.relative.years" = "%d year(s) ago";
+
 // Settings
 "settings.title" = "Settings";
 "settings.profile" = "Profile";

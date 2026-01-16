@@ -73,6 +73,16 @@
 "common.save" = "Enregistrer";
 "common.cancel" = "Annuler";
 
+// Time Relative
+"time.relative.justNow" = "À l'instant";
+"time.relative.seconds" = "Il y a %d seconde(s)";
+"time.relative.minutes" = "Il y a %d minute(s)";
+"time.relative.hours" = "Il y a %d heure(s)";
+"time.relative.days" = "Il y a %d jour(s)";
+"time.relative.weeks" = "Il y a %d semaine(s)";
+"time.relative.months" = "Il y a %d mois";
+"time.relative.years" = "Il y a %d an(s)";
+
 // Settings
 "settings.title" = "Paramètres";
 "settings.profile" = "Profil";

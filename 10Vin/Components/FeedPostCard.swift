@@ -36,7 +36,7 @@ struct FeedPostCard: View {
                     Text(post.username)
                         .font(.headline)
                         .foregroundColor(WineTheme.burgundy)
-                    Text(post.postedDate, style: .relative)
+                    Text(post.postedDate.relativeTimeString)
                         .font(.caption)
                         .foregroundColor(.gray)
                 }
@@ -148,7 +148,7 @@ struct CommentRow: View {
                     .font(.subheadline)
                     .foregroundColor(WineTheme.darkGray)
                 
-                Text(comment.date, style: .relative)
+                Text(comment.date.relativeTimeString)
                     .font(.caption2)
                     .foregroundColor(.gray)
             }

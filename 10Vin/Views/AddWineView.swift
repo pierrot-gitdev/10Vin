@@ -10,14 +10,17 @@ import SwiftUI
 struct AddWineView: View {
     @ObservedObject var viewModel: WineViewModel
     @Environment(\.dismiss) var dismiss
+    @Binding var selectedTab: Int
     
     @State private var selectedType: WineType = .red
-    @State private var grapeVariety: String = ""
+    @State private var selectedGrapeVariety: String = ""
     @State private var domain: String = ""
-    @State private var vintage: String = ""
-    @State private var region: String = ""
+    @State private var selectedYear: Int = Calendar.current.component(.year, from: Date())
+    @State private var selectedRegion: String = ""
     @State private var tastingNotes: String = ""
-    @State private var rating: String = ""
+    @State private var rating: Double = 5.0
+    
+    @State private var showYearPicker = false
     
     var body: some View {
         NavigationView {
@@ -45,12 +48,35 @@ struct AddWineView: View {
                             }
                         }
                         
-                        // Cépage
-                        FormField(
-                            title: "add.wine.grapeVariety".localized,
-                            placeholder: "add.wine.grapeVariety.placeholder".localized,
-                            text: $grapeVariety
-                        )
+                        // Cépage (Dropdown)
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("add.wine.grapeVariety".localized)
+                                .font(.headline)
+                                .foregroundColor(WineTheme.burgundy)
+                            
+                            Menu {
+                                ForEach(FrenchWineData.grapeVarieties, id: \.self) { variety in
+                                    Button(variety) {
+                                        selectedGrapeVariety = variety
+                                    }
+                                }
+                            } label: {
+                                HStack {
+                                    Text(selectedGrapeVariety.isEmpty ? "add.wine.grapeVariety.placeholder".localized : selectedGrapeVariety)
+                                        .foregroundColor(selectedGrapeVariety.isEmpty ? .gray : WineTheme.darkGray)
+                                    Spacer()
+                                    Image(systemName: "chevron.down")
+                                        .foregroundColor(WineTheme.burgundy)
+                                }
+                                .padding()
+                                .background(Color.white)
+                                .cornerRadius(12)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(WineTheme.burgundy.opacity(0.3), lineWidth: 1)
+                                )
+                            }
+                        }
                         
                         // Domaine
                         FormField(
@@ -59,20 +85,79 @@ struct AddWineView: View {
                             text: $domain
                         )
                         
-                        // Millésime
-                        FormField(
-                            title: "add.wine.vintage".localized,
-                            placeholder: "2020",
-                            text: $vintage,
-                            keyboardType: .numberPad
-                        )
+                        // Millésime (Sélecteur d'année)
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("add.wine.vintage".localized)
+                                .font(.headline)
+                                .foregroundColor(WineTheme.burgundy)
+                            
+                            Button(action: {
+                                withAnimation {
+                                    showYearPicker.toggle()
+                                }
+                            }) {
+                                HStack {
+                                    Text(String(format: "%d", selectedYear))
+                                        .foregroundColor(WineTheme.darkGray)
+                                        .font(.body)
+                                    Spacer()
+                                    Image(systemName: showYearPicker ? "chevron.up" : "chevron.down")
+                                        .foregroundColor(WineTheme.burgundy)
+                                        .font(.caption)
+                                }
+                                .padding()
+                                .background(Color.white)
+                                .cornerRadius(12)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(WineTheme.burgundy.opacity(0.3), lineWidth: 1)
+                                )
+                            }
+                            
+                            if showYearPicker {
+                                Picker("", selection: $selectedYear) {
+                                    ForEach(FrenchWineData.years, id: \.self) { year in
+                                        Text(String(format: "%d", year)).tag(year)
+                                    }
+                                }
+                                .pickerStyle(.wheel)
+                                .frame(height: 150)
+                                .background(Color.white)
+                                .cornerRadius(12)
+                                .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+                                .transition(.opacity.combined(with: .move(edge: .top)))
+                            }
+                        }
                         
-                        // Région
-                        FormField(
-                            title: "add.wine.region".localized,
-                            placeholder: "add.wine.region.placeholder".localized,
-                            text: $region
-                        )
+                        // Région (Dropdown)
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("add.wine.region".localized)
+                                .font(.headline)
+                                .foregroundColor(WineTheme.burgundy)
+                            
+                            Menu {
+                                ForEach(FrenchWineData.regions, id: \.self) { region in
+                                    Button(region) {
+                                        selectedRegion = region
+                                    }
+                                }
+                            } label: {
+                                HStack {
+                                    Text(selectedRegion.isEmpty ? "add.wine.region.placeholder".localized : selectedRegion)
+                                        .foregroundColor(selectedRegion.isEmpty ? .gray : WineTheme.darkGray)
+                                    Spacer()
+                                    Image(systemName: "chevron.down")
+                                        .foregroundColor(WineTheme.burgundy)
+                                }
+                                .padding()
+                                .background(Color.white)
+                                .cornerRadius(12)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(WineTheme.burgundy.opacity(0.3), lineWidth: 1)
+                                )
+                            }
+                        }
                         
                         // Notes de dégustation
                         VStack(alignment: .leading, spacing: 12) {
@@ -91,13 +176,52 @@ struct AddWineView: View {
                                 )
                         }
                         
-                        // Note
-                        FormField(
-                            title: "add.wine.rating".localized,
-                            placeholder: "9.5",
-                            text: $rating,
-                            keyboardType: .decimalPad
-                        )
+                        // Note (Incrémenteur)
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("add.wine.rating".localized)
+                                .font(.headline)
+                                .foregroundColor(WineTheme.burgundy)
+                            
+                            HStack(spacing: 20) {
+                                Button(action: {
+                                    if rating > 0 {
+                                        rating = max(0, rating - 0.5)
+                                    }
+                                }) {
+                                    Image(systemName: "minus.circle.fill")
+                                        .font(.system(size: 32))
+                                        .foregroundColor(rating > 0 ? WineTheme.burgundy : .gray)
+                                }
+                                .disabled(rating <= 0)
+                                
+                                Spacer()
+                                
+                                Text(String(format: "%.1f", rating))
+                                    .font(.system(size: 32, weight: .bold))
+                                    .foregroundColor(WineTheme.burgundy)
+                                    .frame(minWidth: 80)
+                                
+                                Spacer()
+                                
+                                Button(action: {
+                                    if rating < 10 {
+                                        rating = min(10, rating + 0.5)
+                                    }
+                                }) {
+                                    Image(systemName: "plus.circle.fill")
+                                        .font(.system(size: 32))
+                                        .foregroundColor(rating < 10 ? WineTheme.burgundy : .gray)
+                                }
+                                .disabled(rating >= 10)
+                            }
+                            .padding()
+                            .background(Color.white)
+                            .cornerRadius(12)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(WineTheme.burgundy.opacity(0.3), lineWidth: 1)
+                            )
+                        }
                     }
                     .padding()
                 }
@@ -118,9 +242,16 @@ struct AddWineView: View {
                     }
                     .fontWeight(.semibold)
                     .foregroundColor(WineTheme.burgundy)
+                    .disabled(!isFormValid)
                 }
             }
         }
+    }
+    
+    private var isFormValid: Bool {
+        !domain.isEmpty &&
+        !selectedGrapeVariety.isEmpty &&
+        !selectedRegion.isEmpty
     }
     
     private func saveWine() {
@@ -128,16 +259,19 @@ struct AddWineView: View {
         
         let newWine = Wine(
             type: selectedType,
-            grapeVariety: grapeVariety,
+            grapeVariety: selectedGrapeVariety,
             domain: domain,
-            vintage: Int(vintage),
-            region: region,
+            vintage: selectedYear,
+            region: selectedRegion,
             tastingNotes: tastingNotes,
-            rating: Double(rating),
+            rating: rating,
             userId: userId
         )
         
         viewModel.addWine(newWine)
+        
+        // Rediriger vers le feed (index 0)
+        selectedTab = 0
         dismiss()
     }
 }
@@ -198,5 +332,5 @@ struct FormField: View {
 }
 
 #Preview {
-    AddWineView(viewModel: WineViewModel())
+    AddWineView(viewModel: WineViewModel(), selectedTab: .constant(0))
 }

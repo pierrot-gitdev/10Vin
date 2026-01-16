@@ -79,6 +79,19 @@ class WineViewModel: ObservableObject {
     
     func addWine(_ wine: Wine) {
         wines.append(wine)
+        
+        // Créer automatiquement un FeedPost pour le vin ajouté
+        if let user = currentUser {
+            let post = FeedPost(
+                wineId: wine.id,
+                userId: user.id,
+                username: user.username,
+                userProfileImageURL: user.profileImageURL,
+                likes: [],
+                comments: []
+            )
+            feedPosts.insert(post, at: 0) // Ajouter en haut du feed
+        }
     }
     
     func addToWishlist(_ wineId: String) {
