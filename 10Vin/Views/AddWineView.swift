@@ -268,11 +268,17 @@ struct AddWineView: View {
             userId: userId
         )
         
-        viewModel.addWine(newWine)
-        
-        // Rediriger vers le feed (index 0)
-        selectedTab = 0
-        dismiss()
+        Task {
+            do {
+                try await viewModel.addWine(newWine)
+                // Rediriger vers le feed (index 0)
+                selectedTab = 0
+                dismiss()
+            } catch {
+                print("Error saving wine: \(error.localizedDescription)")
+                // Erreur silencieuse lors de la sauvegarde du vin
+            }
+        }
     }
 }
 

@@ -9,6 +9,7 @@ import SwiftUI
 
 struct EditProfileView: View {
     @ObservedObject var viewModel: WineViewModel
+    @EnvironmentObject var authService: FirebaseAuthService
     @Environment(\.dismiss) var dismiss
     
     @State private var username: String = ""
@@ -160,15 +161,22 @@ struct EditProfileView: View {
             saveProfileImage(image)
         }
         
-        viewModel.updateUser(user)
-        dismiss()
+        Task {
+            do {
+                try await authService.updateUser(user)
+                viewModel.currentUser = user
+                dismiss()
+            } catch {
+                print("Error saving profile: \(error.localizedDescription)")
+                // Erreur silencieuse lors de la mise à jour du profil
+            }
+        }
     }
     
     private func saveProfileImage(_ image: UIImage) {
         // À implémenter : uploader l'image vers Firebase Storage
         // et mettre à jour user.profileImageURL
         // Pour l'instant, on garde juste la structure
-        print("Image sélectionnée - À uploader vers Firebase Storage")
     }
 }
 

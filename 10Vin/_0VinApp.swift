@@ -6,12 +6,26 @@
 //
 
 import SwiftUI
+import FirebaseCore
 
 @main
 struct _0VinApp: App {
+    @StateObject private var authService = FirebaseAuthService()
+    
+    init() {
+        // Initialiser Firebase
+        FirebaseApp.configure()
+    }
+    
     var body: some Scene {
         WindowGroup {
-            MainTabView()
+            if authService.isAuthenticated {
+                MainTabView()
+                    .environmentObject(authService)
+            } else {
+                LoginView()
+                    .environmentObject(authService)
+            }
         }
     }
 }

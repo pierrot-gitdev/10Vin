@@ -9,6 +9,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @ObservedObject var viewModel: WineViewModel
+    @EnvironmentObject var authService: FirebaseAuthService
     @Environment(\.dismiss) var dismiss
     @State private var showEditProfile = false
     
@@ -79,8 +80,13 @@ struct SettingsView: View {
                         // Section Compte
                         SettingsSection(title: "settings.account".localized) {
                             Button(action: {
-                                viewModel.logout()
-                                dismiss()
+                                do {
+                                    try authService.signOut()
+                                    dismiss()
+                                } catch {
+                                    print("Error logging out: \(error.localizedDescription)")
+                                    // Erreur silencieuse lors de la déconnexion
+                                }
                             }) {
                                 SettingsRow(
                                     icon: "arrow.right.square",

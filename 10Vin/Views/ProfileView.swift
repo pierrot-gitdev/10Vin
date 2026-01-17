@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ProfileView: View {
     @ObservedObject var viewModel: WineViewModel
+    @EnvironmentObject var authService: FirebaseAuthService
     @State private var selectedTab: ProfileTab = .tasted
     @State private var showSettings = false
     
@@ -60,6 +61,7 @@ struct ProfileView: View {
             }
             .sheet(isPresented: $showSettings) {
                 SettingsView(viewModel: viewModel)
+                    .environmentObject(authService)
             }
         }
     }

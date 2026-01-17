@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct MainTabView: View {
+    @EnvironmentObject var authService: FirebaseAuthService
     @StateObject private var viewModel = WineViewModel()
     @State private var showAddWine = false
     @State private var selectedTab = 0
@@ -46,6 +47,25 @@ struct MainTabView: View {
         .tint(Color.accentColor) // Utilise l'AccentColor défini dans Assets
         .sheet(isPresented: $showAddWine) {
             AddWineView(viewModel: viewModel, selectedTab: $selectedTab)
+        }
+        .onAppear {
+            // Synchroniser le currentUser avec authService
+            viewModel.currentUser = authService.currentUser
+            
+            // Charger les données depuis Firebase
+            if let userId = authService.currentUser?.id {
+                Task {
+                    await viewModel.loadData(userId: userId)
+                }
+            }
+        }
+        .onChange(of: authService.currentUser) { newUser in
+            viewModel.currentUser = newUser
+            if let userId = newUser?.id {
+                Task {
+                    await viewModel.loadData(userId: userId)
+                }
+            }
         }
     }
 }

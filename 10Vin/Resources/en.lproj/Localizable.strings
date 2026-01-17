@@ -115,3 +115,20 @@
 "settings.language.title" = "Application Language";
 "settings.language.french" = "French";
 "settings.language.english" = "English";
+
+// Authentication
+"auth.welcome" = "Welcome";
+"auth.createAccount" = "Create Account";
+"auth.email" = "Email";
+"auth.email.placeholder" = "your@email.com";
+"auth.password" = "Password";
+"auth.password.placeholder" = "Your password";
+"auth.username" = "Username";
+"auth.username.placeholder" = "Your username";
+"auth.signIn" = "Sign In";
+"auth.signUp" = "Sign Up";
+"auth.signInWithGoogle" = "Continue with Google";
+"auth.or" = "or";
+"auth.noAccount" = "Don't have an account?";
+"auth.alreadyHaveAccount" = "Already have an account?";
+"auth.error.unknown" = "An error occurred";

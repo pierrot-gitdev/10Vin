@@ -52,7 +52,14 @@ struct FeedPostCard: View {
             // Actions (like, comment)
             HStack(spacing: 20) {
                 Button(action: {
-                    viewModel.likePost(post.id)
+                    Task {
+                        do {
+                            try await viewModel.likePost(post.id)
+                        } catch {
+                            print("Error liking post: \(error.localizedDescription)")
+                            // Erreur silencieuse lors du like
+                        }
+                    }
                 }) {
                     HStack(spacing: 6) {
                         Image(systemName: isLiked ? "heart.fill" : "heart")
@@ -99,8 +106,15 @@ struct FeedPostCard: View {
                     
                     Button(action: {
                         if !commentText.isEmpty {
-                            viewModel.addComment(commentText, to: post.id)
-                            commentText = ""
+                            Task {
+                                do {
+                                    try await viewModel.addComment(commentText, to: post.id)
+                                    commentText = ""
+                                } catch {
+                                    print("Error adding comment: \(error.localizedDescription)")
+                                    // Erreur silencieuse lors de l'ajout de commentaire
+                                }
+                            }
                         }
                     }) {
                         Text("feed.postComment".localized)

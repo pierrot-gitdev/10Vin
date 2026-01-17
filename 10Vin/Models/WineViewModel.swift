@@ -24,60 +24,39 @@ class WineViewModel: ObservableObject {
     @Published var selectedGrapeVariety: String?
     @Published var selectedRegion: String?
     
+    private let firestoreService = FirestoreService()
+    
     init() {
-        // Données de démonstration pour le développement
-        loadSampleData()
+        // Les données seront chargées depuis Firebase
     }
     
-    func loadSampleData() {
-        // Données d'exemple pour le développement
-        let sampleUser = User(
-            id: "user1",
-            username: "WineLover",
-            email: "wine@example.com",
-            privacyLevel: .public
-        )
-        currentUser = sampleUser
+    func loadData(userId: String) async {
+        isLoading = true
+        defer { isLoading = false }
         
-        let sampleWines = [
-            Wine(
-                type: .red,
-                grapeVariety: "Pinot Noir",
-                domain: "Domaine de la Romanée-Conti",
-                vintage: 2018,
-                region: "Bourgogne",
-                tastingNotes: "Un vin d'exception avec des arômes de cerise et d'épices.",
-                rating: 9.5,
-                userId: sampleUser.id
-            ),
-            Wine(
-                type: .white,
-                grapeVariety: "Chardonnay",
-                domain: "Domaine Leflaive",
-                vintage: 2020,
-                region: "Bourgogne",
-                tastingNotes: "Élégant et minéral, avec des notes de beurre et de noisette.",
-                rating: 9.0,
-                userId: sampleUser.id
-            )
-        ]
-        
-        wines = sampleWines
-        
-        let samplePosts = [
-            FeedPost(
-                wineId: sampleWines[0].id,
-                userId: sampleUser.id,
-                username: sampleUser.username,
-                likes: [],
-                comments: []
-            )
-        ]
-        
-        feedPosts = samplePosts
+        do {
+            // Charger les vins de l'utilisateur
+            wines = try await firestoreService.getWines(userId: userId)
+            
+            // Charger les posts du feed (utilisateurs suivis + posts de l'utilisateur)
+            if let user = currentUser {
+                var followingIds = user.following
+                followingIds.append(userId) // Inclure ses propres posts
+                feedPosts = try await firestoreService.getPosts(following: followingIds)
+            } else {
+                feedPosts = try await firestoreService.getPosts()
+            }
+        } catch {
+            print("Error loading data: \(error.localizedDescription)")
+            // Erreur silencieuse lors du chargement des données
+        }
     }
     
-    func addWine(_ wine: Wine) {
+    func addWine(_ wine: Wine) async throws {
+        // Sauvegarder dans Firestore
+        try await firestoreService.createWine(wine)
+        
+        // Ajouter localement
         wines.append(wine)
         
         // Créer automatiquement un FeedPost pour le vin ajouté
@@ -90,6 +69,11 @@ class WineViewModel: ObservableObject {
                 likes: [],
                 comments: []
             )
+            
+            // Sauvegarder le post dans Firestore
+            try await firestoreService.createPost(post)
+            
+            // Ajouter localement
             feedPosts.insert(post, at: 0) // Ajouter en haut du feed
         }
     }
@@ -108,7 +92,7 @@ class WineViewModel: ObservableObject {
         currentUser = user
     }
     
-    func likePost(_ postId: String) {
+    func likePost(_ postId: String) async throws {
         guard let userId = currentUser?.id,
               let index = feedPosts.firstIndex(where: { $0.id == postId }) else { return }
         
@@ -117,15 +101,21 @@ class WineViewModel: ObservableObject {
         } else {
             feedPosts[index].likes.append(userId)
         }
+        
+        // Mettre à jour dans Firestore
+        try await firestoreService.updatePost(feedPosts[index])
     }
     
-    func addComment(_ text: String, to postId: String) {
+    func addComment(_ text: String, to postId: String) async throws {
         guard let userId = currentUser?.id,
               let username = currentUser?.username,
               let index = feedPosts.firstIndex(where: { $0.id == postId }) else { return }
         
         let comment = Comment(userId: userId, username: username, text: text)
         feedPosts[index].comments.append(comment)
+        
+        // Mettre à jour dans Firestore
+        try await firestoreService.updatePost(feedPosts[index])
     }
     
     func updateUser(_ updatedUser: User) {
@@ -138,9 +128,9 @@ class WineViewModel: ObservableObject {
         currentUser = user
     }
     
-    func logout() {
-        // À implémenter avec Firebase plus tard
-        print("Logout - À implémenter avec Firebase")
+    func logout() throws {
+        // Cette fonction sera appelée depuis SettingsView
+        // L'authentification est gérée par FirebaseAuthService
     }
     
     var filteredWines: [Wine] {
