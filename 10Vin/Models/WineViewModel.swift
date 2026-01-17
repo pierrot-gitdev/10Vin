@@ -35,16 +35,47 @@ class WineViewModel: ObservableObject {
         defer { isLoading = false }
         
         do {
-            // Charger les vins de l'utilisateur
-            wines = try await firestoreService.getWines(userId: userId)
+            // Charger d'abord l'utilisateur depuis Firestore
+            if let user = try await firestoreService.getUser(userId: userId) {
+                currentUser = user
+                
+                // Charger les vins goûtés par l'utilisateur en utilisant les IDs de winesTasted
+                if !user.winesTasted.isEmpty {
+                    wines = try await firestoreService.getWinesByIds(user.winesTasted)
+                } else {
+                    wines = []
+                }
+            } else {
+                // Si l'utilisateur n'existe pas, charger les vins par userId comme fallback
+                wines = try await firestoreService.getWines(userId: userId)
+            }
             
             // Charger les posts du feed (utilisateurs suivis + posts de l'utilisateur)
+            var posts: [FeedPost] = []
             if let user = currentUser {
+                // Toujours inclure ses propres posts même s'il ne suit personne
                 var followingIds = user.following
-                followingIds.append(userId) // Inclure ses propres posts
-                feedPosts = try await firestoreService.getPosts(following: followingIds)
+                if !followingIds.contains(userId) {
+                    followingIds.append(userId)
+                }
+                posts = try await firestoreService.getPosts(following: followingIds)
             } else {
-                feedPosts = try await firestoreService.getPosts()
+                // Si pas d'utilisateur, charger tous les posts
+                posts = try await firestoreService.getPosts()
+            }
+            feedPosts = posts
+            
+            // Charger tous les vins associés aux posts du feed
+            let feedWineIds = posts.map { $0.wineId }
+            let uniqueWineIds = Array(Set(feedWineIds))
+            
+            // Charger les vins du feed qui ne sont pas déjà dans wines
+            let existingWineIds = Set(wines.map { $0.id })
+            let missingWineIds = uniqueWineIds.filter { !existingWineIds.contains($0) }
+            
+            if !missingWineIds.isEmpty {
+                let feedWines = try await firestoreService.getWinesByIds(missingWineIds)
+                wines.append(contentsOf: feedWines)
             }
         } catch {
             print("Error loading data: \(error.localizedDescription)")
@@ -53,29 +84,46 @@ class WineViewModel: ObservableObject {
     }
     
     func addWine(_ wine: Wine) async throws {
-        // Sauvegarder dans Firestore
+        guard var user = currentUser else {
+            throw NSError(domain: "WineViewModel", code: -1, userInfo: [NSLocalizedDescriptionKey: "User not authenticated"])
+        }
+        
+        // Sauvegarder le vin dans Firestore
         try await firestoreService.createWine(wine)
+        
+        // Ajouter le vin à la liste des vins goûtés de l'utilisateur
+        if !user.winesTasted.contains(wine.id) {
+            user.winesTasted.append(wine.id)
+            // Mettre à jour l'utilisateur dans Firestore
+            try await firestoreService.updateUser(user)
+        }
+        
+        // Recharger l'utilisateur depuis Firestore pour avoir la version à jour
+        if let updatedUser = try await firestoreService.getUser(userId: user.id) {
+            currentUser = updatedUser
+        } else {
+            // Si le rechargement échoue, utiliser la version locale mise à jour
+            currentUser = user
+        }
         
         // Ajouter localement
         wines.append(wine)
         
         // Créer automatiquement un FeedPost pour le vin ajouté
-        if let user = currentUser {
-            let post = FeedPost(
-                wineId: wine.id,
-                userId: user.id,
-                username: user.username,
-                userProfileImageURL: user.profileImageURL,
-                likes: [],
-                comments: []
-            )
-            
-            // Sauvegarder le post dans Firestore
-            try await firestoreService.createPost(post)
-            
-            // Ajouter localement
-            feedPosts.insert(post, at: 0) // Ajouter en haut du feed
-        }
+        let post = FeedPost(
+            wineId: wine.id,
+            userId: user.id,
+            username: user.username,
+            userProfileImageURL: user.profileImageURL,
+            likes: [],
+            comments: []
+        )
+        
+        // Sauvegarder le post dans Firestore
+        try await firestoreService.createPost(post)
+        
+        // Ajouter localement
+        feedPosts.insert(post, at: 0) // Ajouter en haut du feed
     }
     
     func addToWishlist(_ wineId: String) {

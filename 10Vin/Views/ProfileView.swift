@@ -63,6 +63,14 @@ struct ProfileView: View {
                 SettingsView(viewModel: viewModel)
                     .environmentObject(authService)
             }
+            .onAppear {
+                // Recharger les données quand la vue apparaît
+                if let userId = authService.currentUser?.id {
+                    Task {
+                        await viewModel.loadData(userId: userId)
+                    }
+                }
+            }
         }
     }
     

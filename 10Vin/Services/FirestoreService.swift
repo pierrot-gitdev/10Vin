@@ -88,6 +88,42 @@ class FirestoreService {
         }
     }
     
+    func getWinesByIds(_ wineIds: [String]) async throws -> [Wine] {
+        guard !wineIds.isEmpty else { return [] }
+        
+        // Récupérer les documents individuellement
+        var allWines: [Wine] = []
+        
+        // Récupérer tous les documents en parallèle
+        try await withThrowingTaskGroup(of: Wine?.self) { group in
+            for wineId in wineIds {
+                group.addTask {
+                    do {
+                        let document = try await self.db.collection("wines").document(wineId).getDocument()
+                        guard document.exists,
+                              let data = document.data() else {
+                            return nil
+                        }
+                        return try self.decodeWine(from: data, id: document.documentID)
+                    } catch {
+                        return nil
+                    }
+                }
+            }
+            
+            for try await wine in group {
+                if let wine = wine {
+                    allWines.append(wine)
+                }
+            }
+        }
+        
+        // Trier par ordre de winesTasted pour préserver l'ordre
+        return wineIds.compactMap { id in
+            allWines.first { $0.id == id }
+        }
+    }
+    
     func updateWine(_ wine: Wine) async throws {
         let wineDict: [String: Any] = [
             "type": wine.type.rawValue,
@@ -135,13 +171,43 @@ class FirestoreService {
         var query: Query = db.collection("posts")
         
         if let following = following, !following.isEmpty {
-            query = query.whereField("userId", in: following)
-        }
-        
-        let snapshot = try await query.order(by: "postedDate", descending: true).limit(to: 50).getDocuments()
-        
-        return try snapshot.documents.compactMap { document in
-            try decodePost(from: document.data(), id: document.documentID)
+            // Firestore limite "in" à 10 éléments, donc on doit diviser en lots si nécessaire
+            if following.count <= 10 {
+                query = query.whereField("userId", in: following)
+                let snapshot = try await query.order(by: "postedDate", descending: true).limit(to: 50).getDocuments()
+                return try snapshot.documents.compactMap { document in
+                    try decodePost(from: document.data(), id: document.documentID)
+                }
+            } else {
+                // Si plus de 10 utilisateurs, diviser en lots
+                var allPosts: [FeedPost] = []
+                let batchSize = 10
+                
+                for i in stride(from: 0, to: following.count, by: batchSize) {
+                    let endIndex = min(i + batchSize, following.count)
+                    let batch = Array(following[i..<endIndex])
+                    
+                    let batchQuery = db.collection("posts")
+                        .whereField("userId", in: batch)
+                        .order(by: "postedDate", descending: true)
+                        .limit(to: 50)
+                    
+                    let snapshot = try await batchQuery.getDocuments()
+                    let posts = try snapshot.documents.compactMap { document in
+                        try decodePost(from: document.data(), id: document.documentID)
+                    }
+                    allPosts.append(contentsOf: posts)
+                }
+                
+                // Trier par date et limiter à 50
+                return Array(allPosts.sorted { $0.postedDate > $1.postedDate }.prefix(50))
+            }
+        } else {
+            // Pas de filtre, charger tous les posts
+            let snapshot = try await query.order(by: "postedDate", descending: true).limit(to: 50).getDocuments()
+            return try snapshot.documents.compactMap { document in
+                try decodePost(from: document.data(), id: document.documentID)
+            }
         }
     }
     

@@ -271,6 +271,10 @@ struct AddWineView: View {
         Task {
             do {
                 try await viewModel.addWine(newWine)
+                // Recharger les données pour s'assurer que tout est synchronisé
+                if let userId = viewModel.currentUser?.id {
+                    await viewModel.loadData(userId: userId)
+                }
                 // Rediriger vers le feed (index 0)
                 selectedTab = 0
                 dismiss()
