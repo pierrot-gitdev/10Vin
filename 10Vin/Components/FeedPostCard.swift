@@ -23,14 +23,21 @@ struct FeedPostCard: View {
         VStack(alignment: .leading, spacing: 0) {
             // Header utilisateur
             HStack(spacing: 12) {
-                Circle()
-                    .fill(WineTheme.wineGradient)
-                    .frame(width: 40, height: 40)
-                    .overlay(
-                        Text(String(post.username.prefix(1)).uppercased())
-                            .font(.headline)
-                            .foregroundColor(.white)
-                    )
+                // Photo de profil avec chargement depuis URL
+                Group {
+                    if let imageURL = post.userProfileImageURL, !imageURL.isEmpty, let url = URL(string: imageURL) {
+                        AsyncImageView(url: url, size: 40, fallbackInitial: post.username.first.map { String($0) })
+                    } else {
+                        Circle()
+                            .fill(WineTheme.wineGradient)
+                            .frame(width: 40, height: 40)
+                            .overlay(
+                                Text(String(post.username.prefix(1)).uppercased())
+                                    .font(.headline)
+                                    .foregroundColor(.white)
+                            )
+                    }
+                }
                 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(post.username)

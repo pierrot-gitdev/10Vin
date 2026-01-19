@@ -136,16 +136,25 @@ class FirebaseAuthService: ObservableObject {
             
             let authResult = try await Auth.auth().signIn(with: credential)
             
+            // Récupérer la photo de profil Google
+            let googleProfileImageURL = authResult.user.photoURL?.absoluteString
+            
             // Vérifier si l'utilisateur existe déjà dans Firestore
-            if let existingUser = try? await firestoreService.getUser(userId: authResult.user.uid) {
+            if var existingUser = try? await firestoreService.getUser(userId: authResult.user.uid) {
+                // Si l'utilisateur existe mais n'a pas de photo de profil, utiliser celle de Google
+                // (cas rare : utilisateur créé autrement puis connecté avec Google)
+                if existingUser.profileImageURL == nil, let googleImageURL = googleProfileImageURL, !googleImageURL.isEmpty {
+                    existingUser.profileImageURL = googleImageURL
+                    try await firestoreService.updateUser(existingUser)
+                }
                 self.currentUser = existingUser
             } else {
-                // Créer un nouvel utilisateur
+                // Créer un nouvel utilisateur avec la photo de profil Google
                 let newUser = User(
                     id: authResult.user.uid,
                     username: authResult.user.displayName ?? "User",
                     email: authResult.user.email ?? "",
-                    profileImageURL: authResult.user.photoURL?.absoluteString,
+                    profileImageURL: googleProfileImageURL,
                     winesTasted: [],
                     wishlist: [],
                     following: [],

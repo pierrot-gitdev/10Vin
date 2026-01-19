@@ -92,14 +92,21 @@ struct ProfileHeaderView: View {
     
     var body: some View {
         VStack(spacing: 16) {
-            Circle()
-                .fill(WineTheme.wineGradient)
-                .frame(width: 80, height: 80)
-                .overlay(
-                    Text(String((user?.username.prefix(1) ?? "U").uppercased()))
-                        .font(.system(size: 32, weight: .bold))
-                        .foregroundColor(.white)
-                )
+            // Photo de profil avec chargement depuis URL
+            Group {
+                if let imageURL = user?.profileImageURL, !imageURL.isEmpty, let url = URL(string: imageURL) {
+                    AsyncImageView(url: url, size: 80, fallbackInitial: user?.username.first.map { String($0) })
+                } else {
+                    Circle()
+                        .fill(WineTheme.wineGradient)
+                        .frame(width: 80, height: 80)
+                        .overlay(
+                            Text(String((user?.username.prefix(1) ?? "U").uppercased()))
+                                .font(.system(size: 32, weight: .bold))
+                                .foregroundColor(.white)
+                        )
+                }
+            }
             
             Text(user?.username ?? "User")
                 .font(WineTheme.headlineFont)
