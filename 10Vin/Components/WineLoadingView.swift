@@ -12,10 +12,10 @@ struct WineLoadingView: View {
     @State private var timer: Timer?
     
     private let imageNames = [
-        "LoadingAssets/loading_step1",
-        "LoadingAssets/loading_step2",
-        "LoadingAssets/loading_step3",
-        "LoadingAssets/loading_step4"
+        "loading_step1",
+        "loading_step2",
+        "loading_step3",
+        "loading_step4"
     ]
     
     private let frameDuration: Double = 0.2
@@ -32,6 +32,7 @@ struct WineLoadingView: View {
                         .resizable()
                         .aspectRatio(contentMode: .fit)
                         .frame(width: 120, height: 120)
+                }
             }
         }
         .onAppear {
@@ -98,6 +99,7 @@ struct WineLoadingContent: View {
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(width: 120, height: 120)
+            }
         }
         .padding(32)
         .background(

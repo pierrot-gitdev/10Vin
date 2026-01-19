@@ -11,6 +11,7 @@ import FirebaseCore
 @main
 struct _0VinApp: App {
     @StateObject private var authService = FirebaseAuthService()
+    @State private var showSplash = true
     
     init() {
         // Initialiser Firebase
@@ -19,12 +20,30 @@ struct _0VinApp: App {
     
     var body: some Scene {
         WindowGroup {
-            if authService.isAuthenticated {
-                MainTabView()
-                    .environmentObject(authService)
-            } else {
-                LoginView()
-                    .environmentObject(authService)
+            ZStack {
+                if showSplash {
+                    SplashScreenView()
+                        .transition(.opacity)
+                } else {
+                    // Afficher la vue appropriée selon l'état d'authentification
+                    if authService.isAuthenticated {
+                        MainTabView()
+                            .environmentObject(authService)
+                            .transition(.opacity)
+                    } else {
+                        LoginView()
+                            .environmentObject(authService)
+                            .transition(.opacity)
+                    }
+                }
+            }
+            .onAppear {
+                // Masquer le splash screen après un délai
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                    withAnimation(.easeOut(duration: 0.3)) {
+                        showSplash = false
+                    }
+                }
             }
         }
     }
