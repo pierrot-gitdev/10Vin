@@ -12,9 +12,11 @@ struct MainTabView: View {
     @StateObject private var viewModel = WineViewModel()
     @State private var showAddWine = false
     @State private var selectedTab = 0
+    @State private var isInitialLoading = true
     
     var body: some View {
-        TabView(selection: $selectedTab) {
+        ZStack {
+            TabView(selection: $selectedTab) {
             FeedView(viewModel: viewModel)
                 .tabItem {
                     Label("tab.feed".localized, systemImage: "wineglass.fill")
@@ -66,6 +68,22 @@ struct MainTabView: View {
                     await viewModel.loadData(userId: userId)
                 }
             }
+        }
+        .onChange(of: viewModel.isLoading) { isLoading in
+            // Masquer le loading initial une fois le chargement terminé
+            if !isLoading && isInitialLoading {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    withAnimation(.easeOut(duration: 0.3)) {
+                        isInitialLoading = false
+                    }
+                }
+            }
+        }
+        
+        // Overlay de chargement initial
+        if isInitialLoading || viewModel.isLoading {
+            WineLoadingOverlay(isLoading: .constant(true))
+        }
         }
     }
 }

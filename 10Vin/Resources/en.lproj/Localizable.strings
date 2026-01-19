@@ -65,7 +65,6 @@
 "filter.apply" = "Apply";
 
 // Common
-"common.loading" = "Loading...";
 "common.error" = "Error";
 "common.ok" = "OK";
 "common.delete" = "Delete";

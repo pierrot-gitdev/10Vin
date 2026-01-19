@@ -9,14 +9,14 @@ import SwiftUI
 
 struct WineTheme {
     // Couleurs principales inspirées du vin
-    static let burgundy = Color(red: 0.55, green: 0.11, blue: 0.15) // Rouge bordeaux profond
-    static let wineRed = Color(red: 0.70, green: 0.15, blue: 0.20) // Rouge vin
-    static let darkRed = Color(red: 0.40, green: 0.08, blue: 0.12) // Rouge foncé
-    static let gold = Color(red: 0.85, green: 0.65, blue: 0.13) // Or (pour les accents)
-    static let cream = Color(red: 0.98, green: 0.96, blue: 0.93) // Crème (fond clair)
-    static let vineyardGreen = Color(red: 0.20, green: 0.40, blue: 0.20) // Vert vigne
-    static let lightGray = Color(red: 0.95, green: 0.95, blue: 0.95)
-    static let darkGray = Color(red: 0.30, green: 0.30, blue: 0.30)
+    static let burgundy = Color(hex: "#8C1C26") // Rouge bordeaux profond
+    static let wineRed = Color(hex: "#B32633") // Rouge vin
+    static let darkRed = Color(hex: "#66141F") // Rouge foncé
+    static let gold = Color(hex: "#D9A621") // Or (pour les accents)
+    static let cream = Color(hex: "#FAF5ED") // Crème (fond clair)
+    static let vineyardGreen = Color(hex: "#336633") // Vert vigne
+    static let lightGray = Color(hex: "#F2F2F2")
+    static let darkGray = Color(hex: "#4D4D4D")
     
     // Gradients
     static let wineGradient = LinearGradient(
@@ -26,7 +26,7 @@ struct WineTheme {
     )
     
     static let goldGradient = LinearGradient(
-        colors: [gold, Color(red: 0.95, green: 0.75, blue: 0.25)],
+        colors: [gold, Color(hex: "#F2BF40")],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
@@ -45,11 +45,39 @@ extension WineType {
         case .red:
             return WineTheme.burgundy
         case .white:
-            return Color(red: 0.95, green: 0.90, blue: 0.70) // Jaune paille
+            return Color(hex: "#F2E6B3") // Jaune paille
         case .rose:
-            return Color(red: 0.95, green: 0.75, blue: 0.80) // Rose
+            return Color(hex: "#F2BFCC") // Rose
         case .champagne:
             return WineTheme.gold
         }
+    }
+}
+
+// Extension pour créer une Color depuis un hexadécimal
+extension Color {
+    init(hex: String) {
+        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+        var int: UInt64 = 0
+        Scanner(string: hex).scanHexInt64(&int)
+        let a, r, g, b: UInt64
+        switch hex.count {
+        case 3: // RGB (12-bit)
+            (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
+        case 6: // RGB (24-bit)
+            (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
+        case 8: // ARGB (32-bit)
+            (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
+        default:
+            (a, r, g, b) = (255, 0, 0, 0)
+        }
+
+        self.init(
+            .sRGB,
+            red: Double(r) / 255,
+            green: Double(g) / 255,
+            blue:  Double(b) / 255,
+            opacity: Double(a) / 255
+        )
     }
 }

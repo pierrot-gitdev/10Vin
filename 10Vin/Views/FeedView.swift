@@ -20,10 +20,7 @@ struct FeedView: View {
                 
                 ScrollView {
                     VStack(spacing: 16) {
-                        if viewModel.isLoading {
-                            ProgressView()
-                                .padding()
-                        } else if viewModel.feedPosts.isEmpty {
+                        if viewModel.feedPosts.isEmpty && !viewModel.isLoading {
                             EmptyFeedView()
                         } else {
                             ForEach(viewModel.feedPosts) { post in
