@@ -25,32 +25,29 @@ struct ProfileView: View {
                 WineTheme.cream
                     .ignoresSafeArea()
                 
-                GeometryReader { geometry in
-                    ScrollView {
-                        VStack(spacing: 0) {
-                            // Header profil
-                            ProfileHeaderView(user: viewModel.currentUser)
-                                .padding()
+                ScrollView {
+                    VStack(spacing: 0) {
+                        // Header profil
+                        ProfileHeaderView(user: viewModel.currentUser)
+                            .padding()
+                        
+                        // Sélecteur d'onglets
+                        ProfileTabSelector(selectedTab: $selectedTab)
+                        
+                        // Titre galerie + grille 3 colonnes (HStack par rangée = largeur réelle)
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("profile.gallery.title".localized)
+                                .font(.system(size: 22, weight: .bold))
+                                .foregroundColor(.black)
+                                .padding(.horizontal, 16)
                             
-                            // Sélecteur d'onglets
-                            ProfileTabSelector(selectedTab: $selectedTab)
-                            
-                            // Titre galerie + grille 3 colonnes
-                            VStack(alignment: .leading, spacing: 12) {
-                                Text("profile.gallery.title".localized)
-                                    .font(.system(size: 22, weight: .bold))
-                                    .foregroundColor(.black)
-                                    .padding(.horizontal, 16)
-                                
-                                ProfileGalleryGrid(
-                                    wines: displayedWines,
-                                    availableWidth: geometry.size.width,
-                                    horizontalPadding: 16,
-                                    onWineTap: { selectedWine = $0 }
-                                )
-                            }
-                            .padding(.top, 8)
+                            ProfileGalleryGrid(
+                                wines: displayedWines,
+                                horizontalPadding: 16,
+                                onWineTap: { selectedWine = $0 }
+                            )
                         }
+                        .padding(.top, 8)
                     }
                 }
             }
@@ -245,44 +242,46 @@ struct ProfileTabButton: View {
 /// Hauteur fixe des cellules de la galerie profil (placeholders / photos).
 private let profileGalleryCellHeight: CGFloat = 132
 
-/// Grille 3 colonnes avec GeometryReader : largeur adaptée au téléphone, padding latéral 16.
-/// Hauteur fixe 132 pt. Les images occupent toute la largeur allouée à chaque cellule.
+/// Grille 3 colonnes par rangée (HStack). Largeur = conteneur réel, padding 16, hauteur 132.
+/// Évite les bugs de spacing du LazyVGrid (images centre/droite collées).
 struct ProfileGalleryGrid: View {
     let wines: [Wine]
-    let availableWidth: CGFloat
     let horizontalPadding: CGFloat
     let onWineTap: (Wine) -> Void
     
     private let spacing: CGFloat = 8
     
-    private var cellWidth: CGFloat {
-        let totalPadding = horizontalPadding * 2
-        let width = availableWidth - totalPadding
-        let w = (width - spacing * 2) / 3
-        return max(1, w)
-    }
-    
-    private var columns: [GridItem] {
-        [
-            GridItem(.fixed(cellWidth), spacing: spacing),
-            GridItem(.fixed(cellWidth), spacing: spacing),
-            GridItem(.fixed(cellWidth), spacing: spacing)
-        ]
+    private var rows: [[Wine]] {
+        stride(from: 0, to: wines.count, by: 3).map {
+            Array(wines[$0 ..< min($0 + 3, wines.count)])
+        }
     }
     
     var body: some View {
-        LazyVGrid(columns: columns, spacing: spacing) {
-            ForEach(wines) { wine in
-                Button {
-                    onWineTap(wine)
-                } label: {
-                    ProfileGalleryItemView(wine: wine)
-                        .frame(width: cellWidth, height: profileGalleryCellHeight)
+        VStack(alignment: .leading, spacing: spacing) {
+            ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
+                HStack(spacing: spacing) {
+                    ForEach(0 ..< 3, id: \.self) { col in
+                        if col < row.count {
+                            Button {
+                                onWineTap(row[col])
+                            } label: {
+                                ProfileGalleryItemView(wine: row[col])
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: profileGalleryCellHeight)
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                            .frame(maxWidth: .infinity)
+                        } else {
+                            Color.clear
+                                .frame(maxWidth: .infinity)
+                                .frame(height: profileGalleryCellHeight)
+                        }
+                    }
                 }
-                .buttonStyle(PlainButtonStyle())
+                .padding(.horizontal, horizontalPadding)
             }
         }
-        .padding(.horizontal, horizontalPadding)
     }
 }
 
