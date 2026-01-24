@@ -99,9 +99,9 @@ private struct WineCardOverlayContent: View {
     
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
-            // Fond blanc + ombre
+            // Fond crème teinté (overlay_winecard contient du blanc/gris — contraste)
             RoundedRectangle(cornerRadius: 16)
-                .fill(Color.white)
+                .fill(WineTheme.overlayCardBackground)
                 .shadow(color: Color.black.opacity(0.3), radius: 20, x: 0, y: 10)
             
             // Infos dans la card

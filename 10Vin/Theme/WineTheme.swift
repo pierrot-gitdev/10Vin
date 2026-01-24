@@ -17,6 +17,8 @@ struct WineTheme {
     static let vineyardGreen = Color(hex: "#336633") // Vert vigne
     static let lightGray = Color(hex: "#F2F2F2")
     static let darkGray = Color(hex: "#4D4D4D")
+    /// Fond card overlay : crème + léger bordeaux, pour faire ressortir overlay_winecard (blanc/gris).
+    static let overlayCardBackground = Color(hex: "#F0E6E0")
     
     // Gradients
     static let wineGradient = LinearGradient(
