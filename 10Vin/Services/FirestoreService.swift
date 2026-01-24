@@ -24,8 +24,6 @@ class FirestoreService {
             "wishlist": user.wishlist,
             "following": user.following,
             "followers": user.followers,
-            "followingCount": user.followingCount,
-            "followersCount": user.followersCount,
             "privacyLevel": user.privacyLevel.rawValue
         ]
         
@@ -74,6 +72,35 @@ class FirestoreService {
             allUsers.first { $0.id == id }
         }
     }
+
+    // MARK: - Wishlist (subcollection)
+    
+    func getWishlistIds(userId: String) async throws -> [String] {
+        let snapshot = try await db.collection("users").document(userId)
+            .collection("wishlist")
+            .order(by: "createdAt", descending: true)
+            .getDocuments()
+        return snapshot.documents.map { $0.documentID }
+    }
+    
+    func addWineToWishlist(userId: String, wineId: String, recommendedBy: String? = nil) async throws {
+        var data: [String: Any] = [
+            "id": wineId,
+            "createdAt": FieldValue.serverTimestamp()
+        ]
+        if let recommendedBy = recommendedBy {
+            data["recommendedBy"] = recommendedBy
+        }
+        try await db.collection("users").document(userId)
+            .collection("wishlist").document(wineId)
+            .setData(data)
+    }
+    
+    func removeWineFromWishlist(userId: String, wineId: String) async throws {
+        try await db.collection("users").document(userId)
+            .collection("wishlist").document(wineId)
+            .delete()
+    }
     
     func updateUser(_ user: User) async throws {
         let userDict: [String: Any] = [
@@ -83,9 +110,6 @@ class FirestoreService {
             "profileImageURL": user.profileImageURL as Any,
             "winesTasted": user.winesTasted,
             "wishlist": user.wishlist,
-            // Les relations follow sont gérées via sous-collections + compteurs
-            "followingCount": user.followingCount,
-            "followersCount": user.followersCount,
             "privacyLevel": user.privacyLevel.rawValue
         ]
         

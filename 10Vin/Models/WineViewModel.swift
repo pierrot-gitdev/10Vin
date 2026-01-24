@@ -16,6 +16,8 @@ class WineViewModel: ObservableObject {
     @Published var currentUser: User?
     @Published var followingIds: [String] = []
     @Published var followerIds: [String] = []
+    @Published var wishlistIds: [String] = []
+    @Published var wishlistWines: [Wine] = []
     @Published var isLoading = false
     
     // Settings
@@ -52,11 +54,25 @@ class WineViewModel: ObservableObject {
                     followerIds = user.followers
                 }
                 
+                // Charger wishlist via sous-collection (fallback sur tableau si vide)
+                do {
+                    wishlistIds = try await firestoreService.getWishlistIds(userId: userId)
+                } catch {
+                    wishlistIds = user.wishlist
+                }
+                
                 // Charger les vins goûtés par l'utilisateur en utilisant les IDs de winesTasted
                 if !user.winesTasted.isEmpty {
                     wines = try await firestoreService.getWinesByIds(user.winesTasted)
                 } else {
                     wines = []
+                }
+                
+                // Charger les vins de la wishlist
+                if !wishlistIds.isEmpty {
+                    wishlistWines = try await firestoreService.getWinesByIds(wishlistIds)
+                } else {
+                    wishlistWines = []
                 }
             } else {
                 // Si l'utilisateur n'existe pas, charger les vins par userId comme fallback
@@ -165,16 +181,27 @@ class WineViewModel: ObservableObject {
     
     func addToWishlist(_ wineId: String) {
         guard var user = currentUser else { return }
-        if !user.wishlist.contains(wineId) {
-            user.wishlist.append(wineId)
-            currentUser = user
+        Task {
+            try? await firestoreService.addWineToWishlist(userId: user.id, wineId: wineId)
+            if !wishlistIds.contains(wineId) {
+                wishlistIds.append(wineId)
+            }
+            if !user.wishlist.contains(wineId) {
+                user.wishlist.append(wineId)
+                currentUser = user
+            }
         }
     }
     
     func removeFromWishlist(_ wineId: String) {
         guard var user = currentUser else { return }
-        user.wishlist.removeAll { $0 == wineId }
-        currentUser = user
+        Task {
+            try? await firestoreService.removeWineFromWishlist(userId: user.id, wineId: wineId)
+            wishlistIds.removeAll { $0 == wineId }
+            user.wishlist.removeAll { $0 == wineId }
+            currentUser = user
+            wishlistWines.removeAll { $0.id == wineId }
+        }
     }
     
     func likePost(_ postId: String) async throws {
@@ -269,6 +296,28 @@ class WineViewModel: ObservableObject {
 
     func searchUsers(query: String, limit: Int = 20) async -> [User] {
         return (try? await firestoreService.searchUsers(by: query, limit: limit)) ?? []
+    }
+
+    func recommendWine(to targetUserId: String, wineId: String) async throws {
+        guard let senderId = currentUser?.id else { return }
+        try await firestoreService.addWineToWishlist(userId: targetUserId, wineId: wineId, recommendedBy: senderId)
+    }
+
+    func markWineAsTasted(_ wineId: String) async throws {
+        guard var user = currentUser else { return }
+        if !user.winesTasted.contains(wineId) {
+            user.winesTasted.append(wineId)
+        }
+        user.wishlist.removeAll { $0 == wineId }
+        try await firestoreService.updateUser(user)
+        currentUser = user
+        
+        try? await firestoreService.removeWineFromWishlist(userId: user.id, wineId: wineId)
+        wishlistIds.removeAll { $0 == wineId }
+        wishlistWines.removeAll { $0.id == wineId }
+        
+        // Recharger vins goûtés si nécessaire
+        wines = try await firestoreService.getWinesByIds(user.winesTasted)
     }
     
     func logout() throws {

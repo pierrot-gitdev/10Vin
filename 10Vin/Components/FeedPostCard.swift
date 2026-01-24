@@ -12,6 +12,7 @@ struct FeedPostCard: View {
     let wine: Wine
     @ObservedObject var viewModel: WineViewModel
     let onProfileTap: (String) -> Void
+    let onShare: (Wine) -> Void
     @State private var showComments = false
     @State private var commentText = ""
     @State private var isFollowingUser = false
@@ -98,15 +99,14 @@ struct FeedPostCard: View {
             WineCard(wine: wine, showFullDetails: true)
                 .padding(.horizontal)
             
-            // Actions (like, comment)
-            HStack(spacing: 20) {
+            // Actions (like, comment, share) - pleine largeur
+            HStack(spacing: 0) {
                 Button(action: {
                     Task {
                         do {
                             try await viewModel.likePost(post.id)
                         } catch {
                             print("Error liking post: \(error.localizedDescription)")
-                            // Erreur silencieuse lors du like
                         }
                     }
                 }) {
@@ -117,6 +117,7 @@ struct FeedPostCard: View {
                             .font(.subheadline)
                             .foregroundColor(WineTheme.darkGray)
                     }
+                    .frame(maxWidth: .infinity)
                 }
                 
                 Button(action: {
@@ -129,11 +130,24 @@ struct FeedPostCard: View {
                             .font(.subheadline)
                             .foregroundColor(WineTheme.darkGray)
                     }
+                    .frame(maxWidth: .infinity)
                 }
                 
-                Spacer()
+                Button(action: {
+                    onShare(wine)
+                }) {
+                    HStack(spacing: 6) {
+                        Image("share")
+                            .renderingMode(.original)
+                        Text("feed.share".localized)
+                            .font(.subheadline)
+                            .foregroundColor(WineTheme.darkGray)
+                    }
+                    .frame(maxWidth: .infinity)
+                }
             }
-            .padding()
+            .padding(.horizontal)
+            .padding(.vertical, 10)
             
             // Section commentaires
             if showComments {
@@ -254,6 +268,12 @@ struct CommentRow: View {
         ]
     )
     
-    FeedPostCard(post: post, wine: wine, viewModel: viewModel, onProfileTap: { _ in })
+    FeedPostCard(
+        post: post,
+        wine: wine,
+        viewModel: viewModel,
+        onProfileTap: { _ in },
+        onShare: { _ in }
+    )
         .padding()
 }

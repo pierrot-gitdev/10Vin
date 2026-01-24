@@ -46,6 +46,7 @@
 "profile.winesCount" = "%d vin(s)";
 "profile.wishlist.add" = "Ajouter à la wishlist";
 "profile.wishlist.remove" = "Retirer de la wishlist";
+"profile.markAsTasted" = "Marquer comme dégusté";
 
 // Feed
 "feed.title" = "Découvrir";
@@ -57,6 +58,13 @@
 "feed.postComment" = "Publier";
 "feed.search.placeholder" = "Rechercher un utilisateur...";
 "feed.search.noResults" = "Aucun utilisateur trouvé";
+"feed.share" = "Partager";
+
+// Share
+"share.title" = "Recommander";
+"share.send" = "Envoyer";
+"share.sent" = "Envoyé";
+"share.empty" = "Vous ne suivez encore personne";
 "feed.follow" = "Suivre";
 "feed.following" = "Suivi";
 

@@ -65,7 +65,18 @@ struct ProfileView: View {
             }
             .overlay {
                 if let wine = selectedWine {
-                    WineCardFlipOverlay(wine: wine, onDismiss: { selectedWine = nil }, viewModel: viewModel)
+                    WineCardFlipOverlay(
+                        wine: wine,
+                        onDismiss: { selectedWine = nil },
+                        viewModel: viewModel,
+                        actionTitle: selectedTab == .wishlist ? "profile.markAsTasted".localized : nil,
+                        onAction: selectedTab == .wishlist ? {
+                            Task {
+                                try? await viewModel.markWineAsTasted(wine.id)
+                                selectedWine = nil
+                            }
+                        } : nil
+                    )
                 }
             }
             .navigationTitle("profile.title".localized)
@@ -110,14 +121,13 @@ struct ProfileView: View {
     }
     
     private var displayedWines: [Wine] {
-        let userWines = viewModel.wines.filter { $0.userId == viewModel.currentUser?.id }
+        let tastedIds = viewModel.currentUser?.winesTasted ?? []
         
         switch selectedTab {
         case .tasted:
-            return userWines
+            return viewModel.wines.filter { tastedIds.contains($0.id) }
         case .wishlist:
-            guard let wishlist = viewModel.currentUser?.wishlist else { return [] }
-            return userWines.filter { wishlist.contains($0.id) }
+            return viewModel.wishlistWines
         }
     }
 }

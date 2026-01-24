@@ -46,6 +46,7 @@
 "profile.winesCount" = "%d wine(s)";
 "profile.wishlist.add" = "Add to wishlist";
 "profile.wishlist.remove" = "Remove from wishlist";
+"profile.markAsTasted" = "Mark as tasted";
 
 // Feed
 "feed.title" = "Discover";
@@ -57,6 +58,13 @@
 "feed.postComment" = "Post";
 "feed.search.placeholder" = "Search users...";
 "feed.search.noResults" = "No users found";
+"feed.share" = "Share";
+
+// Share
+"share.title" = "Recommend";
+"share.send" = "Send";
+"share.sent" = "Sent";
+"share.empty" = "You are not following anyone yet";
 "feed.follow" = "Follow";
 "feed.following" = "Following";
 

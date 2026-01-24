@@ -11,6 +11,22 @@ struct WineCardFlipOverlay: View {
     let wine: Wine
     let onDismiss: () -> Void
     @ObservedObject var viewModel: WineViewModel
+    let actionTitle: String?
+    let onAction: (() -> Void)?
+
+    init(
+        wine: Wine,
+        onDismiss: @escaping () -> Void,
+        viewModel: WineViewModel,
+        actionTitle: String? = nil,
+        onAction: (() -> Void)? = nil
+    ) {
+        self.wine = wine
+        self.onDismiss = onDismiss
+        self.viewModel = viewModel
+        self.actionTitle = actionTitle
+        self.onAction = onAction
+    }
     
     @State private var flipAngle: Double = 0
     @State private var backgroundOpacity: Double = 0
@@ -56,7 +72,9 @@ struct WineCardFlipOverlay: View {
                         .opacity(flipAngle < 90 ? 1 : 0)
                     
                     WineCardOverlayContent(
-                        wine: viewModel.wines.first(where: { $0.id == wine.id }) ?? wine
+                        wine: viewModel.wines.first(where: { $0.id == wine.id }) ?? wine,
+                        actionTitle: actionTitle,
+                        onAction: onAction
                     )
                     .frame(width: 320, height: 420)
                     .rotation3DEffect(
@@ -96,6 +114,8 @@ struct WineCardFlipOverlay: View {
 /// Carte vin overlay : ZStack centré, contenu fixe (pas de ScrollView), infos + overlay_winecard.
 private struct WineCardOverlayContent: View {
     let wine: Wine
+    let actionTitle: String?
+    let onAction: (() -> Void)?
     
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
@@ -148,7 +168,7 @@ private struct WineCardOverlayContent: View {
                 .font(.subheadline)
                 .foregroundColor(WineTheme.darkGray)
                 
-                if !wine.tastingNotes.isEmpty {
+            if !wine.tastingNotes.isEmpty {
                     Divider()
                         .padding(.vertical, 4)
                     Text(wine.tastingNotes)
@@ -156,6 +176,19 @@ private struct WineCardOverlayContent: View {
                         .foregroundColor(WineTheme.darkGray)
                         .lineLimit(4)
                 }
+
+            if let actionTitle = actionTitle, let onAction = onAction {
+                Button(action: onAction) {
+                    Text(actionTitle)
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .background(WineTheme.burgundy)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                }
+            }
                 
                 Spacer(minLength: 0)
             }
