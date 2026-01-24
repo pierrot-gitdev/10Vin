@@ -1,14 +1,14 @@
-const functions = require("firebase-functions");
+const { onDocumentCreated, onDocumentDeleted } = require("firebase-functions/v2/firestore");
 const admin = require("firebase-admin");
 
 admin.initializeApp();
 const db = admin.firestore();
 
 // Increment counts when a follow relation is created.
-exports.onFollowCreate = functions.firestore
-  .document("users/{followerId}/following/{followeeId}")
-  .onCreate(async (snap, context) => {
-    const { followerId, followeeId } = context.params;
+exports.onFollowCreate = onDocumentCreated(
+  "users/{followerId}/following/{followeeId}",
+  async (event) => {
+    const { followerId, followeeId } = event.params;
     if (!followerId || !followeeId || followerId === followeeId) {
       return null;
     }
@@ -24,13 +24,14 @@ exports.onFollowCreate = functions.firestore
         followersCount: admin.firestore.FieldValue.increment(1),
       });
     });
-  });
+  }
+);
 
 // Decrement counts when a follow relation is removed.
-exports.onFollowDelete = functions.firestore
-  .document("users/{followerId}/following/{followeeId}")
-  .onDelete(async (snap, context) => {
-    const { followerId, followeeId } = context.params;
+exports.onFollowDelete = onDocumentDeleted(
+  "users/{followerId}/following/{followeeId}",
+  async (event) => {
+    const { followerId, followeeId } = event.params;
     if (!followerId || !followeeId || followerId === followeeId) {
       return null;
     }
@@ -46,4 +47,5 @@ exports.onFollowDelete = functions.firestore
         followersCount: admin.firestore.FieldValue.increment(-1),
       });
     });
-  });
+  }
+);
