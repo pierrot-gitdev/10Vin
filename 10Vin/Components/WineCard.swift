@@ -12,6 +12,12 @@ struct WineCard: View {
     var showFullDetails: Bool = false
     /// Afficher la photo du vin. Mettre à false pour l’overlay profil.
     var showImage: Bool = true
+    var spaciousOverlay: Bool = false
+    
+    private var innerSpacing: CGFloat { spaciousOverlay ? 16 : 12 }
+    private var sectionSpacing: CGFloat { spaciousOverlay ? 10 : 6 }
+    private var horizontalPadding: CGFloat { spaciousOverlay ? 20 : 16 }
+    private var verticalPadding: CGFloat { spaciousOverlay ? 20 : 16 }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -24,7 +30,7 @@ struct WineCard: View {
                     .clipped()
             }
             
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: innerSpacing) {
                 // Header avec type et rating
             HStack {
                 // Badge type de vin
@@ -57,24 +63,24 @@ struct WineCard: View {
             
             // Domaine
             Text(wine.domain)
-                .font(WineTheme.headlineFont)
+                .font(spaciousOverlay ? .system(size: 22, weight: .semibold, design: .serif) : WineTheme.headlineFont)
                 .foregroundColor(WineTheme.burgundy)
             
             // Infos principales
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: sectionSpacing) {
                 if let vintage = wine.vintage {
                     InfoRow(icon: "calendar", text: "\("wine.card.vintage".localized): \(vintage)")
                 }
                 InfoRow(icon: "map", text: "\("wine.card.region".localized): \(wine.region)")
                 InfoRow(icon: "leaf", text: wine.grapeVariety)
             }
-            .font(.subheadline)
+            .font(spaciousOverlay ? .body : .subheadline)
             .foregroundColor(WineTheme.darkGray)
             
             // Notes de dégustation (si showFullDetails)
             if showFullDetails && !wine.tastingNotes.isEmpty {
                 Divider()
-                    .padding(.vertical, 4)
+                    .padding(.vertical, spaciousOverlay ? 8 : 4)
                 
                 Text(wine.tastingNotes)
                     .font(.body)
@@ -82,13 +88,18 @@ struct WineCard: View {
                     .lineLimit(nil)
             }
             }
-            .padding()
+            .padding(.horizontal, horizontalPadding)
+            .padding(.vertical, verticalPadding)
         }
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color.white)
-                .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 2)
-        )
+        .background {
+            if spaciousOverlay {
+                Color.clear
+            } else {
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color.white)
+                    .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 2)
+            }
+        }
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 }

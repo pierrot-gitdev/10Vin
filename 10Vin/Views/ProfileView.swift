@@ -59,19 +59,18 @@ struct ProfileView: View {
             .navigationTitle("profile.title".localized)
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    HStack(spacing: 16) {
-                        // Icône notification (sans action pour l'instant)
-                        Image(systemName: "bell.fill")
-                            .foregroundColor(WineTheme.darkGray)
-                            .font(.title3)
-                        
-                        Button(action: {
-                            showSettings = true
-                        }) {
-                            Image(systemName: "gearshape.fill")
+                if selectedWine == nil {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        HStack(spacing: 16) {
+                            Image(systemName: "bell.fill")
                                 .foregroundColor(WineTheme.darkGray)
                                 .font(.title3)
+                            
+                            Button(action: { showSettings = true }) {
+                                Image(systemName: "gearshape.fill")
+                                    .foregroundColor(WineTheme.darkGray)
+                                    .font(.title3)
+                            }
                         }
                     }
                 }
