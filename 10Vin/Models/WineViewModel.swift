@@ -25,6 +25,7 @@ class WineViewModel: ObservableObject {
     @Published var selectedRegion: String?
     
     private let firestoreService = FirestoreService()
+    private let storageService = FirebaseStorageService()
     
     init() {
         // Les données seront chargées depuis Firebase
@@ -83,13 +84,26 @@ class WineViewModel: ObservableObject {
         }
     }
     
-    func addWine(_ wine: Wine) async throws {
+    func addWine(_ wine: Wine, image: UIImage? = nil) async throws {
         guard var user = currentUser else {
             throw NSError(domain: "WineViewModel", code: -1, userInfo: [NSLocalizedDescriptionKey: "User not authenticated"])
         }
         
+        var wineToSave = wine
+        
+        // Upload l'image si elle existe
+        if let image = image {
+            do {
+                let imageURL = try await storageService.uploadWineImage(image, wineId: wine.id)
+                wineToSave.imageURL = imageURL
+            } catch {
+                // Si l'upload échoue, on continue sans l'image plutôt que de bloquer la création du vin
+                // L'utilisateur pourra toujours ajouter une photo plus tard
+            }
+        }
+        
         // Sauvegarder le vin dans Firestore
-        try await firestoreService.createWine(wine)
+        try await firestoreService.createWine(wineToSave)
         
         // Ajouter le vin à la liste des vins goûtés de l'utilisateur
         if !user.winesTasted.contains(wine.id) {
@@ -106,12 +120,14 @@ class WineViewModel: ObservableObject {
             currentUser = user
         }
         
-        // Ajouter localement
-        wines.append(wine)
+        // Ajouter localement seulement si le vin n'existe pas déjà
+        if !wines.contains(where: { $0.id == wineToSave.id }) {
+            wines.append(wineToSave)
+        }
         
         // Créer automatiquement un FeedPost pour le vin ajouté
         let post = FeedPost(
-            wineId: wine.id,
+            wineId: wineToSave.id,
             userId: user.id,
             username: user.username,
             userProfileImageURL: user.profileImageURL,
@@ -120,10 +136,16 @@ class WineViewModel: ObservableObject {
         )
         
         // Sauvegarder le post dans Firestore
-        try await firestoreService.createPost(post)
-        
-        // Ajouter localement
-        feedPosts.insert(post, at: 0) // Ajouter en haut du feed
+        do {
+            try await firestoreService.createPost(post)
+            
+            // Ajouter localement seulement si le post n'existe pas déjà
+            if !feedPosts.contains(where: { $0.id == post.id }) {
+                feedPosts.insert(post, at: 0) // Ajouter en haut du feed
+            }
+        } catch {
+            // Ne pas bloquer si la création du post échoue, le vin est déjà sauvegardé
+        }
     }
     
     func addToWishlist(_ wineId: String) {

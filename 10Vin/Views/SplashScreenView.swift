@@ -13,7 +13,8 @@ struct SplashScreenView: View {
     
     var body: some View {
         ZStack {
-            WineTheme.cream
+            Image("App_background")
+                .resizable()
                 .ignoresSafeArea()
             
             VStack(spacing: 24) {
@@ -30,7 +31,7 @@ struct SplashScreenView: View {
                 // Nom de l'app (optionnel)
                 Text("10Vin")
                     .font(.system(size: 32, weight: .bold, design: .serif))
-                    .foregroundColor(WineTheme.burgundy)
+                    .foregroundColor(WineTheme.cream)
                     .opacity(opacity)
             }
         }

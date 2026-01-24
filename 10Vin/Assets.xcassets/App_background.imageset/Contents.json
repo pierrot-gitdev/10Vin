@@ -1,11 +1,11 @@
 {
   "images" : [
     {
+      "filename" : "background_app.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "Group 481928.png",
       "idiom" : "universal",
       "scale" : "2x"
     },

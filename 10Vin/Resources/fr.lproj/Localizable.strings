@@ -29,6 +29,7 @@
 "add.wine.tastingNotes" = "Notes de dégustation";
 "add.wine.tastingNotes.placeholder" = "Décrivez votre expérience...";
 "add.wine.rating" = "Note (sur 10)";
+"add.wine.photo" = "Ajouter une photo";
 "add.wine.save" = "Enregistrer";
 "add.wine.cancel" = "Annuler";
 

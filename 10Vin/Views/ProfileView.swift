@@ -24,16 +24,16 @@ struct ProfileView: View {
                 WineTheme.cream
                     .ignoresSafeArea()
                 
-                VStack(spacing: 0) {
-                    // Header profil
-                    ProfileHeaderView(user: viewModel.currentUser)
-                        .padding()
-                    
-                    // Sélecteur d'onglets
-                    ProfileTabSelector(selectedTab: $selectedTab)
-                    
-                    // Contenu
-                    ScrollView {
+                ScrollView {
+                    VStack(spacing: 0) {
+                        // Header profil
+                        ProfileHeaderView(user: viewModel.currentUser)
+                            .padding()
+                        
+                        // Sélecteur d'onglets
+                        ProfileTabSelector(selectedTab: $selectedTab)
+                        
+                        // Contenu
                         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
                             ForEach(displayedWines) { wine in
                                 NavigationLink(destination: WineDetailView(wine: wine, viewModel: viewModel)) {

@@ -32,6 +32,7 @@ struct Wine: Identifiable, Codable {
     var region: String // Région
     var tastingNotes: String // Note sur la dégustation
     var rating: Double? // Note sur 10
+    var imageURL: String? // URL de la photo du vin
     var addedDate: Date
     var userId: String
     
@@ -44,6 +45,7 @@ struct Wine: Identifiable, Codable {
         region: String,
         tastingNotes: String,
         rating: Double? = nil,
+        imageURL: String? = nil,
         addedDate: Date = Date(),
         userId: String
     ) {
@@ -55,6 +57,7 @@ struct Wine: Identifiable, Codable {
         self.region = region
         self.tastingNotes = tastingNotes
         self.rating = rating
+        self.imageURL = imageURL
         self.addedDate = addedDate
         self.userId = userId
     }

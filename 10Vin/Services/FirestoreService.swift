@@ -67,6 +67,7 @@ class FirestoreService {
             "region": wine.region,
             "tastingNotes": wine.tastingNotes,
             "rating": wine.rating as Any,
+            "imageURL": wine.imageURL as Any,
             "addedDate": Timestamp(date: wine.addedDate),
             "userId": wine.userId
         ]
@@ -132,7 +133,8 @@ class FirestoreService {
             "vintage": wine.vintage as Any,
             "region": wine.region,
             "tastingNotes": wine.tastingNotes,
-            "rating": wine.rating as Any
+            "rating": wine.rating as Any,
+            "imageURL": wine.imageURL as Any
         ]
         
         try await db.collection("wines").document(wine.id).updateData(wineDict)
@@ -271,6 +273,7 @@ class FirestoreService {
             region: region,
             tastingNotes: tastingNotes,
             rating: data["rating"] as? Double,
+            imageURL: data["imageURL"] as? String,
             addedDate: timestamp.dateValue(),
             userId: userId
         )

@@ -19,6 +19,11 @@ struct AddWineView: View {
     @State private var selectedRegion: String = ""
     @State private var tastingNotes: String = ""
     @State private var rating: Double = 5.0
+    @State private var selectedImage: UIImage? = nil
+    @State private var showPhotoSelection = false
+    @State private var showError = false
+    @State private var errorMessage = ""
+    @State private var isSaving = false
     
     @State private var showYearPicker = false
     
@@ -30,6 +35,49 @@ struct AddWineView: View {
                 
                 ScrollView {
                     VStack(spacing: 24) {
+                        // Section Photo
+                        VStack(alignment: .leading, spacing: 0) {
+                            // Titre avec fond sombre
+                            Text("add.wine.photo".localized)
+                                .font(.headline)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding()
+                                .background(WineTheme.darkGray)
+                            
+                            // Zone de sélection de photo
+                            Button(action: {
+                                showPhotoSelection = true
+                            }) {
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .fill(Color.white)
+                                        .frame(height: 250)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 16)
+                                                .stroke(WineTheme.darkGray.opacity(0.2), lineWidth: 1)
+                                        )
+                                    
+                                    if let image = selectedImage {
+                                        Image(uiImage: image)
+                                            .resizable()
+                                            .scaledToFill()
+                                            .frame(height: 250)
+                                            .clipped()
+                                            .cornerRadius(16)
+                                    } else {
+                                        VStack(spacing: 12) {
+                                            Image(systemName: "photo.badge.plus")
+                                                .font(.system(size: 50))
+                                                .foregroundColor(WineTheme.darkGray.opacity(0.4))
+                                        }
+                                    }
+                                }
+                            }
+                            .padding(.top, 12)
+                        }
+                        
                         // Type de vin
                         VStack(alignment: .leading, spacing: 12) {
                             Text("add.wine.type".localized)
@@ -242,8 +290,16 @@ struct AddWineView: View {
                     }
                     .fontWeight(.semibold)
                     .foregroundColor(WineTheme.burgundy)
-                    .disabled(!isFormValid)
+                    .disabled(!isFormValid || isSaving)
                 }
+            }
+            .sheet(isPresented: $showPhotoSelection) {
+                PhotoSelectionView(selectedImage: $selectedImage)
+            }
+            .alert("Erreur", isPresented: $showError) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text(errorMessage)
             }
         }
     }
@@ -255,7 +311,11 @@ struct AddWineView: View {
     }
     
     private func saveWine() {
+        // Empêcher les doubles clics
+        guard !isSaving else { return }
         guard let userId = viewModel.currentUser?.id else { return }
+        
+        isSaving = true
         
         let newWine = Wine(
             type: selectedType,
@@ -270,7 +330,7 @@ struct AddWineView: View {
         
         Task {
             do {
-                try await viewModel.addWine(newWine)
+                try await viewModel.addWine(newWine, image: selectedImage)
                 // Recharger les données pour s'assurer que tout est synchronisé
                 if let userId = viewModel.currentUser?.id {
                     await viewModel.loadData(userId: userId)
@@ -279,8 +339,16 @@ struct AddWineView: View {
                 selectedTab = 0
                 dismiss()
             } catch {
-                print("Error saving wine: \(error.localizedDescription)")
-                // Erreur silencieuse lors de la sauvegarde du vin
+                // Afficher un message d'erreur à l'utilisateur
+                let nsError = error as NSError
+                if nsError.localizedDescription.contains("Permission") || 
+                   nsError.localizedDescription.contains("permissions") {
+                    errorMessage = "Erreur de permissions. Vérifiez les règles de sécurité Firebase."
+                } else {
+                    errorMessage = "Erreur lors de la sauvegarde : \(error.localizedDescription)"
+                }
+                showError = true
+                isSaving = false
             }
         }
     }

@@ -23,22 +23,12 @@ struct MainTabView: View {
                 }
                 .tag(0)
             
-            Button(action: {
-                showAddWine = true
-            }) {
-                VStack {
-                    Image(systemName: "plus.circle.fill")
-                        .font(.system(size: 40))
-                        .foregroundColor(WineTheme.burgundy)
-                    Text("tab.add".localized)
-                        .font(.caption)
-                        .foregroundColor(WineTheme.burgundy)
+            // Onglet Add - ouvre directement le formulaire
+            Color.clear
+                .tabItem {
+                    Label("tab.add".localized, systemImage: "plus.circle")
                 }
-            }
-            .tabItem {
-                Label("tab.add".localized, systemImage: "plus.circle")
-            }
-            .tag(1)
+                .tag(1)
             
             ProfileView(viewModel: viewModel)
                 .tabItem {
@@ -47,8 +37,20 @@ struct MainTabView: View {
                 .tag(2)
         }
         .tint(Color.accentColor) // Utilise l'AccentColor défini dans Assets
+        .onChange(of: selectedTab) { newTab in
+            // Ouvrir directement le formulaire quand l'onglet Add est sélectionné
+            if newTab == 1 {
+                showAddWine = true
+            }
+        }
         .sheet(isPresented: $showAddWine) {
             AddWineView(viewModel: viewModel, selectedTab: $selectedTab)
+        }
+        .onChange(of: showAddWine) { isPresented in
+            // Revenir au feed quand le formulaire est fermé
+            if !isPresented && selectedTab == 1 {
+                selectedTab = 0
+            }
         }
         .onAppear {
             // Synchroniser le currentUser avec authService

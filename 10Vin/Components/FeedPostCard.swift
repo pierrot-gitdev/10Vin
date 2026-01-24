@@ -52,7 +52,7 @@ struct FeedPostCard: View {
             }
             .padding()
             
-            // Carte du vin
+            // Carte du vin (contient déjà la photo)
             WineCard(wine: wine, showFullDetails: true)
                 .padding(.horizontal)
             

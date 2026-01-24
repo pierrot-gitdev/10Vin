@@ -86,6 +86,12 @@ struct PhotoSelectionView: View {
         .sheet(isPresented: $showImagePicker) {
             ImagePicker(selectedImage: $selectedImage, sourceType: sourceType)
         }
+        .onChange(of: selectedImage) { newImage in
+            // Fermer automatiquement la vue de sélection quand une image est choisie
+            if newImage != nil {
+                dismiss()
+            }
+        }
     }
 }
 

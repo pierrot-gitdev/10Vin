@@ -12,8 +12,17 @@ struct WineCard: View {
     var showFullDetails: Bool = false
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            // Header avec type et rating
+        VStack(alignment: .leading, spacing: 0) {
+            // Photo du vin (si disponible)
+            if let imageURL = wine.imageURL, !imageURL.isEmpty, let url = URL(string: imageURL) {
+                WineImageView(url: url)
+                    .frame(height: showFullDetails ? 250 : 180)
+                    .frame(maxWidth: .infinity)
+                    .clipped()
+            }
+            
+            VStack(alignment: .leading, spacing: 12) {
+                // Header avec type et rating
             HStack {
                 // Badge type de vin
                 HStack(spacing: 6) {
@@ -69,13 +78,15 @@ struct WineCard: View {
                     .foregroundColor(WineTheme.darkGray)
                     .lineLimit(nil)
             }
+            }
+            .padding()
         }
-        .padding()
         .background(
             RoundedRectangle(cornerRadius: 16)
                 .fill(Color.white)
                 .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 2)
         )
+        .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 }
 
