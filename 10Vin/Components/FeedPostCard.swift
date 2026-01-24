@@ -137,10 +137,7 @@ struct FeedPostCard: View {
                     onShare(wine)
                 }) {
                     HStack(spacing: 6) {
-                        Image("share")
-                            .renderingMode(.original)
-                        Text("feed.share".localized)
-                            .font(.subheadline)
+                        Image(systemName: "square.and.arrow.up")
                             .foregroundColor(WineTheme.darkGray)
                     }
                     .frame(maxWidth: .infinity)
