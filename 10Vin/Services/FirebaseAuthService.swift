@@ -73,6 +73,8 @@ class FirebaseAuthService: ObservableObject {
                 wishlist: [],
                 following: [],
                 followers: [],
+                followingCount: 0,
+                followersCount: 0,
                 privacyLevel: .public
             )
             
@@ -159,6 +161,8 @@ class FirebaseAuthService: ObservableObject {
                     wishlist: [],
                     following: [],
                     followers: [],
+                    followingCount: 0,
+                    followersCount: 0,
                     privacyLevel: .public
                 )
                 

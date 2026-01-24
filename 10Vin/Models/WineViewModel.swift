@@ -14,6 +14,8 @@ class WineViewModel: ObservableObject {
     @Published var wines: [Wine] = []
     @Published var feedPosts: [FeedPost] = []
     @Published var currentUser: User?
+    @Published var followingIds: [String] = []
+    @Published var followerIds: [String] = []
     @Published var isLoading = false
     
     // Settings
@@ -40,6 +42,16 @@ class WineViewModel: ObservableObject {
             if let user = try await firestoreService.getUser(userId: userId) {
                 currentUser = user
                 
+                // Charger les relations follow depuis les sous-collections
+                do {
+                    followingIds = try await firestoreService.getFollowingIds(userId: userId)
+                    followerIds = try await firestoreService.getFollowerIds(userId: userId)
+                } catch {
+                    // En cas d'échec, fallback sur les tableaux du document user
+                    followingIds = user.following
+                    followerIds = user.followers
+                }
+                
                 // Charger les vins goûtés par l'utilisateur en utilisant les IDs de winesTasted
                 if !user.winesTasted.isEmpty {
                     wines = try await firestoreService.getWinesByIds(user.winesTasted)
@@ -55,11 +67,14 @@ class WineViewModel: ObservableObject {
             var posts: [FeedPost] = []
             if let user = currentUser {
                 // Toujours inclure ses propres posts même s'il ne suit personne
-                var followingIds = user.following
-                if !followingIds.contains(userId) {
-                    followingIds.append(userId)
+                var idsForFeed = followingIds
+                if idsForFeed.isEmpty {
+                    idsForFeed = user.following
                 }
-                posts = try await firestoreService.getPosts(following: followingIds)
+                if !idsForFeed.contains(userId) {
+                    idsForFeed.append(userId)
+                }
+                posts = try await firestoreService.getPosts(following: idsForFeed)
             } else {
                 // Si pas d'utilisateur, charger tous les posts
                 posts = try await firestoreService.getPosts()
@@ -187,6 +202,50 @@ class WineViewModel: ObservableObject {
         // Mettre à jour dans Firestore
         try await firestoreService.updatePost(feedPosts[index])
     }
+
+    // MARK: - Follow
+    
+    func followUser(_ targetUserId: String) async throws {
+        guard let userId = currentUser?.id else { return }
+        let didFollow = try await firestoreService.followUser(followerId: userId, followeeId: targetUserId)
+        guard didFollow else { return }
+        
+        if !followingIds.contains(targetUserId) {
+            followingIds.append(targetUserId)
+        }
+        if var user = currentUser {
+            user.followingCount += 1
+            currentUser = user
+        }
+        
+        // Recharger la liste following depuis le backend (source of truth)
+        if let refreshed = try? await firestoreService.getFollowingIds(userId: userId) {
+            followingIds = refreshed
+        }
+    }
+    
+    func unfollowUser(_ targetUserId: String) async throws {
+        guard let userId = currentUser?.id else { return }
+        let didUnfollow = try await firestoreService.unfollowUser(followerId: userId, followeeId: targetUserId)
+        guard didUnfollow else { return }
+        
+        followingIds.removeAll { $0 == targetUserId }
+        if var user = currentUser {
+            user.followingCount = max(0, user.followingCount - 1)
+            currentUser = user
+        }
+        
+        // Recharger la liste following depuis le backend (source of truth)
+        if let refreshed = try? await firestoreService.getFollowingIds(userId: userId) {
+            followingIds = refreshed
+        }
+    }
+    
+    func isFollowing(_ targetUserId: String) async -> Bool {
+        guard let userId = currentUser?.id else { return false }
+        if followingIds.contains(targetUserId) { return true }
+        return (try? await firestoreService.isFollowing(followerId: userId, followeeId: targetUserId)) ?? false
+    }
     
     func updateUser(_ updatedUser: User) {
         currentUser = updatedUser
@@ -196,6 +255,20 @@ class WineViewModel: ObservableObject {
         guard var user = currentUser else { return }
         user.privacyLevel = level
         currentUser = user
+    }
+
+    // MARK: - Users
+    
+    func getUser(by userId: String) async -> User? {
+        return try? await firestoreService.getUser(userId: userId)
+    }
+    
+    func getUsers(by userIds: [String]) async -> [User] {
+        return (try? await firestoreService.getUsersByIds(userIds)) ?? []
+    }
+
+    func searchUsers(query: String, limit: Int = 20) async -> [User] {
+        return (try? await firestoreService.searchUsers(by: query, limit: limit)) ?? []
     }
     
     func logout() throws {

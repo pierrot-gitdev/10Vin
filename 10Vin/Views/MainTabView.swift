@@ -17,7 +17,7 @@ struct MainTabView: View {
     var body: some View {
         ZStack {
             TabView(selection: $selectedTab) {
-            FeedView(viewModel: viewModel)
+            FeedView(viewModel: viewModel, selectedTab: $selectedTab)
                 .tabItem {
                     Label("tab.feed".localized, systemImage: "wineglass.fill")
                 }

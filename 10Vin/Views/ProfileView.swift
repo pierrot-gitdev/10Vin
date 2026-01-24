@@ -13,6 +13,8 @@ struct ProfileView: View {
     @State private var selectedTab: ProfileTab = .tasted
     @State private var showSettings = false
     @State private var selectedWine: Wine?
+    @State private var showFollowList = false
+    @State private var followListType: FollowListType = .following
     
     enum ProfileTab {
         case tasted
@@ -28,7 +30,17 @@ struct ProfileView: View {
                 ScrollView {
                     VStack(spacing: 0) {
                         // Header profil
-                        ProfileHeaderView(user: viewModel.currentUser)
+                        ProfileHeaderView(
+                            user: viewModel.currentUser,
+                            onFollowingTap: {
+                                followListType = .following
+                                showFollowList = true
+                            },
+                            onFollowersTap: {
+                                followListType = .followers
+                                showFollowList = true
+                            }
+                        )
                             .padding()
                         
                         // Sélecteur d'onglets
@@ -79,6 +91,13 @@ struct ProfileView: View {
                 SettingsView(viewModel: viewModel)
                     .environmentObject(authService)
             }
+            .sheet(isPresented: $showFollowList) {
+                FollowersFollowingListView(
+                    type: followListType,
+                    userIds: followListType == .following ? viewModel.followingIds : viewModel.followerIds,
+                    viewModel: viewModel
+                )
+            }
             .onAppear {
                 // Recharger les données quand la vue apparaît
                 if let userId = authService.currentUser?.id {
@@ -105,6 +124,8 @@ struct ProfileView: View {
 
 struct ProfileHeaderView: View {
     let user: User?
+    let onFollowingTap: () -> Void
+    let onFollowersTap: () -> Void
     
     var body: some View {
         HStack(alignment: .top, spacing: 16) {
@@ -133,20 +154,26 @@ struct ProfileHeaderView: View {
                 if let user = user {
                     HStack(spacing: 0) {
                         // Following
-                        ProfileStatView(
-                            count: user.following.count,
-                            label: "profile.following".localized
-                        )
+                        Button(action: onFollowingTap) {
+                            ProfileStatView(
+                                count: max(user.followingCount, user.following.count),
+                                label: "profile.following".localized
+                            )
+                        }
+                        .buttonStyle(PlainButtonStyle())
                         
                         Rectangle()
                             .fill(WineTheme.darkGray.opacity(0.3))
                             .frame(width: 1, height: 32)
                         
                         // Followers
-                        ProfileStatView(
-                            count: user.followers.count,
-                            label: "profile.followers".localized
-                        )
+                        Button(action: onFollowersTap) {
+                            ProfileStatView(
+                                count: max(user.followersCount, user.followers.count),
+                                label: "profile.followers".localized
+                            )
+                        }
+                        .buttonStyle(PlainButtonStyle())
                         
                         Rectangle()
                             .fill(WineTheme.darkGray.opacity(0.3))

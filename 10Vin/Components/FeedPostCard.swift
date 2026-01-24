@@ -11,44 +11,86 @@ struct FeedPostCard: View {
     let post: FeedPost
     let wine: Wine
     @ObservedObject var viewModel: WineViewModel
+    let onProfileTap: (String) -> Void
     @State private var showComments = false
     @State private var commentText = ""
+    @State private var isFollowingUser = false
+    @State private var showFollowError = false
+    @State private var followErrorMessage = ""
     
     var isLiked: Bool {
         guard let userId = viewModel.currentUser?.id else { return false }
         return post.likes.contains(userId)
+    }
+
+    private var isOwnPost: Bool {
+        guard let userId = viewModel.currentUser?.id else { return false }
+        return post.userId == userId
     }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Header utilisateur
             HStack(spacing: 12) {
-                // Photo de profil avec chargement depuis URL
-                Group {
-                    if let imageURL = post.userProfileImageURL, !imageURL.isEmpty, let url = URL(string: imageURL) {
-                        AsyncImageView(url: url, size: 40, fallbackInitial: post.username.first.map { String($0) })
-                    } else {
-                        Circle()
-                            .fill(WineTheme.wineGradient)
-                            .frame(width: 40, height: 40)
-                            .overlay(
-                                Text(String(post.username.prefix(1)).uppercased())
-                                    .font(.headline)
-                                    .foregroundColor(.white)
-                            )
+                Button(action: { onProfileTap(post.userId) }) {
+                    HStack(spacing: 12) {
+                        // Photo de profil avec chargement depuis URL
+                        Group {
+                            if let imageURL = post.userProfileImageURL, !imageURL.isEmpty, let url = URL(string: imageURL) {
+                                AsyncImageView(url: url, size: 40, fallbackInitial: post.username.first.map { String($0) })
+                            } else {
+                                Circle()
+                                    .fill(WineTheme.wineGradient)
+                                    .frame(width: 40, height: 40)
+                                    .overlay(
+                                        Text(String(post.username.prefix(1)).uppercased())
+                                            .font(.headline)
+                                            .foregroundColor(.white)
+                                    )
+                            }
+                        }
+                        
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(post.username)
+                                .font(.headline)
+                                .foregroundColor(WineTheme.burgundy)
+                            Text(post.postedDate.relativeTimeString)
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                        }
                     }
                 }
-                
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(post.username)
-                        .font(.headline)
-                        .foregroundColor(WineTheme.burgundy)
-                    Text(post.postedDate.relativeTimeString)
-                        .font(.caption)
-                        .foregroundColor(.gray)
-                }
+                .buttonStyle(PlainButtonStyle())
                 
                 Spacer()
+
+                if !isOwnPost {
+                    Button(action: {
+                        Task {
+                            do {
+                                if isFollowingUser {
+                                    try await viewModel.unfollowUser(post.userId)
+                                } else {
+                                    try await viewModel.followUser(post.userId)
+                                }
+                            } catch {
+                                await MainActor.run {
+                                    followErrorMessage = error.localizedDescription
+                                    showFollowError = true
+                                }
+                            }
+                        }
+                    }) {
+                        Text(isFollowingUser ? "feed.following".localized : "feed.follow".localized)
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(isFollowingUser ? WineTheme.burgundy.opacity(0.15) : WineTheme.burgundy)
+                            .foregroundColor(isFollowingUser ? WineTheme.burgundy : .white)
+                            .cornerRadius(20)
+                    }
+                }
             }
             .padding()
             
@@ -142,6 +184,17 @@ struct FeedPostCard: View {
         .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 2)
         .padding(.horizontal)
         .padding(.vertical, 8)
+        .alert("common.error".localized, isPresented: $showFollowError) {
+            Button("common.ok".localized, role: .cancel) { }
+        } message: {
+            Text(followErrorMessage)
+        }
+        .onAppear {
+            isFollowingUser = viewModel.followingIds.contains(post.userId)
+        }
+        .onChange(of: viewModel.followingIds) { _ in
+            isFollowingUser = viewModel.followingIds.contains(post.userId)
+        }
     }
 }
 
@@ -201,6 +254,6 @@ struct CommentRow: View {
         ]
     )
     
-    return FeedPostCard(post: post, wine: wine, viewModel: viewModel)
+    FeedPostCard(post: post, wine: wine, viewModel: viewModel, onProfileTap: { _ in })
         .padding()
 }

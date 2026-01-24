@@ -55,6 +55,10 @@
 "feed.comments" = "Comments";
 "feed.addComment" = "Add a comment...";
 "feed.postComment" = "Post";
+"feed.search.placeholder" = "Search users...";
+"feed.search.noResults" = "No users found";
+"feed.follow" = "Follow";
+"feed.following" = "Following";
 
 // Wine Card
 "wine.card.domain" = "Domain";
@@ -78,6 +82,7 @@
 "common.edit" = "Edit";
 "common.save" = "Save";
 "common.cancel" = "Cancel";
+"common.loading" = "Loading...";
 
 // Time Relative
 "time.relative.justNow" = "Just now";

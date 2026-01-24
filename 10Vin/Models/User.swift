@@ -16,6 +16,8 @@ struct User: Identifiable, Codable, Equatable {
     var wishlist: [String] // IDs des vins en wish-list
     var following: [String] // IDs des utilisateurs suivis
     var followers: [String] // IDs des followers
+    var followingCount: Int
+    var followersCount: Int
     var privacyLevel: PrivacyLevel
     
     init(
@@ -27,6 +29,8 @@ struct User: Identifiable, Codable, Equatable {
         wishlist: [String] = [],
         following: [String] = [],
         followers: [String] = [],
+        followingCount: Int = 0,
+        followersCount: Int = 0,
         privacyLevel: PrivacyLevel = .public
     ) {
         self.id = id
@@ -37,6 +41,8 @@ struct User: Identifiable, Codable, Equatable {
         self.wishlist = wishlist
         self.following = following
         self.followers = followers
+        self.followingCount = followingCount
+        self.followersCount = followersCount
         self.privacyLevel = privacyLevel
     }
 }

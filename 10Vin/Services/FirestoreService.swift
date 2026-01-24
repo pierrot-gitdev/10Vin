@@ -17,12 +17,15 @@ class FirestoreService {
         let userDict: [String: Any] = [
             "id": user.id,
             "username": user.username,
+            "usernameLower": user.username.lowercased(),
             "email": user.email,
             "profileImageURL": user.profileImageURL as Any,
             "winesTasted": user.winesTasted,
             "wishlist": user.wishlist,
             "following": user.following,
             "followers": user.followers,
+            "followingCount": user.followingCount,
+            "followersCount": user.followersCount,
             "privacyLevel": user.privacyLevel.rawValue
         ]
         
@@ -39,20 +42,105 @@ class FirestoreService {
         
         return try decodeUser(from: data)
     }
+
+    func getUsersByIds(_ userIds: [String]) async throws -> [User] {
+        guard !userIds.isEmpty else { return [] }
+        var allUsers: [User] = []
+
+        try await withThrowingTaskGroup(of: User?.self) { group in
+            for userId in userIds {
+                group.addTask {
+                    do {
+                        let document = try await self.db.collection("users").document(userId).getDocument()
+                        guard document.exists,
+                              let data = document.data() else {
+                            return nil
+                        }
+                        return try self.decodeUser(from: data)
+                    } catch {
+                        return nil
+                    }
+                }
+            }
+
+            for try await user in group {
+                if let user = user {
+                    allUsers.append(user)
+                }
+            }
+        }
+
+        return userIds.compactMap { id in
+            allUsers.first { $0.id == id }
+        }
+    }
     
     func updateUser(_ user: User) async throws {
         let userDict: [String: Any] = [
             "username": user.username,
+            "usernameLower": user.username.lowercased(),
             "email": user.email,
             "profileImageURL": user.profileImageURL as Any,
             "winesTasted": user.winesTasted,
             "wishlist": user.wishlist,
-            "following": user.following,
-            "followers": user.followers,
+            // Les relations follow sont gérées via sous-collections + compteurs
+            "followingCount": user.followingCount,
+            "followersCount": user.followersCount,
             "privacyLevel": user.privacyLevel.rawValue
         ]
         
         try await db.collection("users").document(user.id).updateData(userDict)
+    }
+
+    func searchUsers(by query: String, limit: Int = 20) async throws -> [User] {
+        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return [] }
+        
+        var results: [User] = []
+        var seen = Set<String>()
+        
+        func appendUnique(_ users: [User]) {
+            for user in users {
+                guard !seen.contains(user.id) else { continue }
+                results.append(user)
+                seen.insert(user.id)
+                if results.count >= limit { return }
+            }
+        }
+        
+        // 1) Recherche principale sur usernameLower (case-insensitive)
+        let lowerResults = try await queryUsers(field: "usernameLower", query: trimmed.lowercased(), limit: limit)
+        appendUnique(lowerResults)
+        
+        // 2) Fallback sur username (case-sensitive) pour anciens users sans usernameLower
+        if results.count < limit {
+            let exactResults = try await queryUsers(field: "username", query: trimmed, limit: limit)
+            appendUnique(exactResults)
+        }
+        
+        if results.count < limit {
+            let capitalized = trimmed.capitalized
+            if capitalized != trimmed {
+                let capResults = try await queryUsers(field: "username", query: capitalized, limit: limit)
+                appendUnique(capResults)
+            }
+        }
+        
+        return Array(results.prefix(limit))
+    }
+    
+    private func queryUsers(field: String, query: String, limit: Int) async throws -> [User] {
+        let snapshot = try await db.collection("users")
+            .order(by: field)
+            .start(at: [query])
+            .end(at: [query + "\u{f8ff}"])
+            .limit(to: limit)
+            .getDocuments()
+        
+        return try snapshot.documents.compactMap { document in
+            let data = document.data()
+            return try decodeUser(from: data)
+        }
     }
     
     // MARK: - Wines
@@ -239,6 +327,11 @@ class FirestoreService {
             throw FirestoreError.invalidData
         }
         
+        let followingList = data["following"] as? [String] ?? []
+        let followersList = data["followers"] as? [String] ?? []
+        let followingCount = data["followingCount"] as? Int ?? followingList.count
+        let followersCount = data["followersCount"] as? Int ?? followersList.count
+        
         return User(
             id: id,
             username: username,
@@ -246,10 +339,96 @@ class FirestoreService {
             profileImageURL: data["profileImageURL"] as? String,
             winesTasted: data["winesTasted"] as? [String] ?? [],
             wishlist: data["wishlist"] as? [String] ?? [],
-            following: data["following"] as? [String] ?? [],
-            followers: data["followers"] as? [String] ?? [],
+            following: followingList,
+            followers: followersList,
+            followingCount: followingCount,
+            followersCount: followersCount,
             privacyLevel: PrivacyLevel(rawValue: data["privacyLevel"] as? String ?? "public") ?? .public
         )
+    }
+
+    // MARK: - Follow System
+    
+    func followUser(followerId: String, followeeId: String) async throws -> Bool {
+        guard followerId != followeeId else { return false }
+        
+        let followingRef = db.collection("users").document(followerId)
+            .collection("following").document(followeeId)
+        let followersRef = db.collection("users").document(followeeId)
+            .collection("followers").document(followerId)
+        let result = try await db.runTransaction { transaction, _ in
+            let followingSnap: DocumentSnapshot
+            do {
+                followingSnap = try transaction.getDocument(followingRef)
+            } catch {
+                return false
+            }
+            
+            if followingSnap.exists {
+                return false
+            }
+            
+            let data: [String: Any] = [
+                "id": followeeId,
+                "createdAt": FieldValue.serverTimestamp()
+            ]
+            let reverseData: [String: Any] = [
+                "id": followerId,
+                "createdAt": FieldValue.serverTimestamp()
+            ]
+            
+            transaction.setData(data, forDocument: followingRef)
+            transaction.setData(reverseData, forDocument: followersRef)
+            
+            return true
+        }
+        return (result as? Bool) ?? false
+    }
+    
+    func unfollowUser(followerId: String, followeeId: String) async throws -> Bool {
+        guard followerId != followeeId else { return false }
+        
+        let followingRef = db.collection("users").document(followerId)
+            .collection("following").document(followeeId)
+        let followersRef = db.collection("users").document(followeeId)
+            .collection("followers").document(followerId)
+        let result = try await db.runTransaction { transaction, _ in
+            let followingSnap: DocumentSnapshot
+            do {
+                followingSnap = try transaction.getDocument(followingRef)
+            } catch {
+                return false
+            }
+            
+            if !followingSnap.exists {
+                return false
+            }
+            
+            transaction.deleteDocument(followingRef)
+            transaction.deleteDocument(followersRef)
+            
+            return true
+        }
+        return (result as? Bool) ?? false
+    }
+    
+    func isFollowing(followerId: String, followeeId: String) async throws -> Bool {
+        guard followerId != followeeId else { return false }
+        let doc = try await db.collection("users").document(followerId)
+            .collection("following").document(followeeId).getDocument()
+        return doc.exists
+    }
+    
+    func getFollowingIds(userId: String) async throws -> [String] {
+        let snapshot = try await db.collection("users").document(userId)
+            .collection("following").getDocuments()
+        return snapshot.documents.map { $0.documentID }
+    }
+    
+    func getFollowerIds(userId: String) async throws -> [String] {
+        let snapshot = try await db.collection("users").document(userId)
+            .collection("followers").getDocuments()
+        return snapshot.documents.map { $0.documentID }
     }
     
     private func decodeWine(from data: [String: Any], id: String) throws -> Wine? {
