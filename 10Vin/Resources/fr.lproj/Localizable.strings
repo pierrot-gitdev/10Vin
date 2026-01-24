@@ -34,9 +34,15 @@
 "add.wine.cancel" = "Annuler";
 
 // Profile
-"profile.title" = "Mon Profil";
+"profile.title" = "Mon profil";
 "profile.winesTasted" = "Vins goûtés";
 "profile.wishlist" = "Ma liste de souhaits";
+"profile.tab.tasted" = "Mes dégust";
+"profile.tab.wishlist" = "À déguster";
+"profile.gallery.title" = "Mes dégustations";
+"profile.following" = "Following";
+"profile.followers" = "Followers";
+"profile.10vino" = "10Vino";
 "profile.winesCount" = "%d vin(s)";
 "profile.wishlist.add" = "Ajouter à la wishlist";
 "profile.wishlist.remove" = "Retirer de la wishlist";

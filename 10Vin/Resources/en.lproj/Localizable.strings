@@ -37,6 +37,12 @@
 "profile.title" = "My Profile";
 "profile.winesTasted" = "Wines Tasted";
 "profile.wishlist" = "My Wishlist";
+"profile.tab.tasted" = "My Tastings";
+"profile.tab.wishlist" = "To Taste";
+"profile.gallery.title" = "My Tastings";
+"profile.following" = "Following";
+"profile.followers" = "Followers";
+"profile.10vino" = "10Vino";
 "profile.winesCount" = "%d wine(s)";
 "profile.wishlist.add" = "Add to wishlist";
 "profile.wishlist.remove" = "Remove from wishlist";

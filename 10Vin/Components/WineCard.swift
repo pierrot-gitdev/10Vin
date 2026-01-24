@@ -10,11 +10,14 @@ import SwiftUI
 struct WineCard: View {
     let wine: Wine
     var showFullDetails: Bool = false
+    /// Afficher la photo du vin. Mettre à false pour l’overlay profil.
+    var showImage: Bool = true
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Photo du vin (si disponible)
-            if let imageURL = wine.imageURL, !imageURL.isEmpty, let url = URL(string: imageURL) {
+            // Photo du vin (si disponible et affichage activé)
+            if showImage,
+               let imageURL = wine.imageURL, !imageURL.isEmpty, let url = URL(string: imageURL) {
                 WineImageView(url: url)
                     .frame(height: showFullDetails ? 250 : 180)
                     .frame(maxWidth: .infinity)

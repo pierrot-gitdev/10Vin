@@ -12,6 +12,7 @@ struct ProfileView: View {
     @EnvironmentObject var authService: FirebaseAuthService
     @State private var selectedTab: ProfileTab = .tasted
     @State private var showSettings = false
+    @State private var selectedWine: Wine?
     
     enum ProfileTab {
         case tasted
@@ -24,38 +25,57 @@ struct ProfileView: View {
                 WineTheme.cream
                     .ignoresSafeArea()
                 
-                ScrollView {
-                    VStack(spacing: 0) {
-                        // Header profil
-                        ProfileHeaderView(user: viewModel.currentUser)
-                            .padding()
-                        
-                        // Sélecteur d'onglets
-                        ProfileTabSelector(selectedTab: $selectedTab)
-                        
-                        // Contenu
-                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
-                            ForEach(displayedWines) { wine in
-                                NavigationLink(destination: WineDetailView(wine: wine, viewModel: viewModel)) {
-                                    WineCard(wine: wine)
-                                }
-                                .buttonStyle(PlainButtonStyle())
+                GeometryReader { geometry in
+                    ScrollView {
+                        VStack(spacing: 0) {
+                            // Header profil
+                            ProfileHeaderView(user: viewModel.currentUser)
+                                .padding()
+                            
+                            // Sélecteur d'onglets
+                            ProfileTabSelector(selectedTab: $selectedTab)
+                            
+                            // Titre galerie + grille 3 colonnes
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("profile.gallery.title".localized)
+                                    .font(.system(size: 22, weight: .bold))
+                                    .foregroundColor(.black)
+                                    .padding(.horizontal, 16)
+                                
+                                ProfileGalleryGrid(
+                                    wines: displayedWines,
+                                    availableWidth: geometry.size.width,
+                                    horizontalPadding: 16,
+                                    onWineTap: { selectedWine = $0 }
+                                )
                             }
+                            .padding(.top, 8)
                         }
-                        .padding()
                     }
+                }
+            }
+            .overlay {
+                if let wine = selectedWine {
+                    WineCardFlipOverlay(wine: wine, onDismiss: { selectedWine = nil }, viewModel: viewModel)
                 }
             }
             .navigationTitle("profile.title".localized)
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: {
-                        showSettings = true
-                    }) {
-                        Image(systemName: "gearshape.fill")
-                            .foregroundColor(WineTheme.burgundy)
+                    HStack(spacing: 16) {
+                        // Icône notification (sans action pour l'instant)
+                        Image(systemName: "bell.fill")
+                            .foregroundColor(WineTheme.darkGray)
                             .font(.title3)
+                        
+                        Button(action: {
+                            showSettings = true
+                        }) {
+                            Image(systemName: "gearshape.fill")
+                                .foregroundColor(WineTheme.darkGray)
+                                .font(.title3)
+                        }
                     }
                 }
             }
@@ -91,8 +111,8 @@ struct ProfileHeaderView: View {
     let user: User?
     
     var body: some View {
-        VStack(spacing: 16) {
-            // Photo de profil avec chargement depuis URL
+        HStack(alignment: .top, spacing: 16) {
+            // Photo de profil (gauche)
             Group {
                 if let imageURL = user?.profileImageURL, !imageURL.isEmpty, let url = URL(string: imageURL) {
                     AsyncImageView(url: url, size: 80, fallbackInitial: user?.username.first.map { String($0) })
@@ -108,18 +128,46 @@ struct ProfileHeaderView: View {
                 }
             }
             
-            Text(user?.username ?? "User")
-                .font(WineTheme.headlineFont)
-                .foregroundColor(WineTheme.burgundy)
-            
-            if let user = user {
-                Text("profile.winesCount".localized.replacingOccurrences(of: "%d", with: "\(user.winesTasted.count)"))
-                    .font(.subheadline)
-                    .foregroundColor(WineTheme.darkGray)
+            // Nom + stats (droite)
+            VStack(alignment: .leading, spacing: 12) {
+                Text(user?.username ?? "User")
+                    .font(.system(size: 22, weight: .bold))
+                    .foregroundColor(.black)
+                
+                if let user = user {
+                    HStack(spacing: 0) {
+                        // Following
+                        ProfileStatView(
+                            count: user.following.count,
+                            label: "profile.following".localized
+                        )
+                        
+                        Rectangle()
+                            .fill(WineTheme.darkGray.opacity(0.3))
+                            .frame(width: 1, height: 32)
+                        
+                        // Followers
+                        ProfileStatView(
+                            count: user.followers.count,
+                            label: "profile.followers".localized
+                        )
+                        
+                        Rectangle()
+                            .fill(WineTheme.darkGray.opacity(0.3))
+                            .frame(width: 1, height: 32)
+                        
+                        // 10Vino (nombre de vins dans la galerie de dégust)
+                        ProfileStatView(
+                            count: user.winesTasted.count,
+                            label: "profile.10vino".localized
+                        )
+                    }
+                }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .frame(maxWidth: .infinity)
         .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 16)
                 .fill(Color.white)
@@ -128,49 +176,113 @@ struct ProfileHeaderView: View {
     }
 }
 
+struct ProfileStatView: View {
+    let count: Int
+    let label: String
+    
+    var body: some View {
+        VStack(spacing: 2) {
+            Text("\(count)")
+                .font(.system(size: 18, weight: .bold))
+                .foregroundColor(.black)
+            Text(label)
+                .font(.system(size: 12, weight: .regular))
+                .foregroundColor(.black.opacity(0.8))
+        }
+        .frame(maxWidth: .infinity)
+    }
+}
+
 struct ProfileTabSelector: View {
     @Binding var selectedTab: ProfileView.ProfileTab
     
     var body: some View {
-        HStack(spacing: 0) {
-            TabButton(
-                title: "profile.winesTasted".localized,
+        HStack(spacing: 12) {
+            ProfileTabButton(
+                title: "profile.tab.tasted".localized,
                 isSelected: selectedTab == .tasted
             ) {
                 selectedTab = .tasted
             }
             
-            TabButton(
-                title: "profile.wishlist".localized,
+            ProfileTabButton(
+                title: "profile.tab.wishlist".localized,
                 isSelected: selectedTab == .wishlist
             ) {
                 selectedTab = .wishlist
             }
         }
         .padding(.horizontal)
-        .padding(.vertical, 8)
+        .padding(.vertical, 12)
     }
 }
 
-struct TabButton: View {
+struct ProfileTabButton: View {
     let title: String
     let isSelected: Bool
     let action: () -> Void
     
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 8) {
-                Text(title)
-                    .font(.subheadline)
-                    .fontWeight(isSelected ? .semibold : .regular)
-                    .foregroundColor(isSelected ? WineTheme.burgundy : WineTheme.darkGray)
-                
-                Rectangle()
-                    .fill(isSelected ? WineTheme.burgundy : Color.clear)
-                    .frame(height: 2)
-            }
-            .frame(maxWidth: .infinity)
+            Text(title)
+                .font(.subheadline)
+                .fontWeight(.semibold)
+                .foregroundColor(isSelected ? .white : WineTheme.burgundy)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(isSelected ? WineTheme.burgundy : Color.clear)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(WineTheme.burgundy, lineWidth: isSelected ? 0 : 1)
+                )
         }
+    }
+}
+
+/// Hauteur fixe des cellules de la galerie profil (placeholders / photos).
+private let profileGalleryCellHeight: CGFloat = 132
+
+/// Grille 3 colonnes avec GeometryReader : largeur adaptée au téléphone, padding latéral 16.
+/// Hauteur fixe 132 pt. Les images occupent toute la largeur allouée à chaque cellule.
+struct ProfileGalleryGrid: View {
+    let wines: [Wine]
+    let availableWidth: CGFloat
+    let horizontalPadding: CGFloat
+    let onWineTap: (Wine) -> Void
+    
+    private let spacing: CGFloat = 8
+    
+    private var cellWidth: CGFloat {
+        let totalPadding = horizontalPadding * 2
+        let width = availableWidth - totalPadding
+        let w = (width - spacing * 2) / 3
+        return max(1, w)
+    }
+    
+    private var columns: [GridItem] {
+        [
+            GridItem(.fixed(cellWidth), spacing: spacing),
+            GridItem(.fixed(cellWidth), spacing: spacing),
+            GridItem(.fixed(cellWidth), spacing: spacing)
+        ]
+    }
+    
+    var body: some View {
+        LazyVGrid(columns: columns, spacing: spacing) {
+            ForEach(wines) { wine in
+                Button {
+                    onWineTap(wine)
+                } label: {
+                    ProfileGalleryItemView(wine: wine)
+                        .frame(width: cellWidth, height: profileGalleryCellHeight)
+                }
+                .buttonStyle(PlainButtonStyle())
+            }
+        }
+        .padding(.horizontal, horizontalPadding)
     }
 }
 

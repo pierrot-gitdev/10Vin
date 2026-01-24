@@ -34,35 +34,28 @@ struct WineImageView: View {
                 }
             }
         }
-        .onAppear {
-            if let url = url {
-                loadImage(from: url)
-            }
+        .task(id: url?.absoluteString) {
+            guard let url = url else { return }
+            await loadImage(from: url)
         }
     }
     
-    private func loadImage(from url: URL) {
+    private func loadImage(from url: URL) async {
         guard image == nil else { return }
         isLoading = true
         
-        Task {
-            do {
-                let (data, _) = try await URLSession.shared.data(from: url)
-                if let uiImage = UIImage(data: data) {
-                    await MainActor.run {
-                        self.image = uiImage
-                        self.isLoading = false
-                    }
-                } else {
-                    await MainActor.run {
-                        self.isLoading = false
-                    }
-                }
-            } catch {
+        do {
+            let (data, _) = try await URLSession.shared.data(from: url)
+            if let uiImage = UIImage(data: data) {
                 await MainActor.run {
+                    self.image = uiImage
                     self.isLoading = false
                 }
+            } else {
+                await MainActor.run { self.isLoading = false }
             }
+        } catch {
+            await MainActor.run { self.isLoading = false }
         }
     }
 }
